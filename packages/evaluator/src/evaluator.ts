@@ -29,6 +29,7 @@ export interface EvalOptions {
   endAt?: string;
   count?: number;
   formatInTimezone?: boolean;
+  maxLoopCount?: number;
 }
 
 interface FieldInfo {
@@ -36,6 +37,7 @@ interface FieldInfo {
   max: number;
 }
 
+const MAX_LOOP_COUNT = 10_000;
 const FLD_SECOND = 'second';
 const FLD_MINUTE = 'minute';
 const FLD_HOUR = 'hour';
@@ -403,7 +405,11 @@ export function getFutureMatches(expr: CronExpr, options: EvalOptions = {}): str
   const nextTimes: string[] = [];
   const timeSeries = getTimeSeries(expr, startTime);
 
-  while (true) {
+  const maxLoopCount = options.maxLoopCount || MAX_LOOP_COUNT;
+  let loopCount = 0;
+  while (loopCount < maxLoopCount) {
+    loopCount++;
+
     const newTime = timeSeries.next().value;
     if (!newTime || (endTime && newTime.toMillis() >= endTime.toMillis())) {
       break;
@@ -413,7 +419,6 @@ export function getFutureMatches(expr: CronExpr, options: EvalOptions = {}): str
       continue;
     }
 
-    // console.log('####### checking time', newTime.toISO());
     if (isExprMatches(expr, newTime)) {
       nextTimes.push(getOutputTime(newTime, options));
     }
