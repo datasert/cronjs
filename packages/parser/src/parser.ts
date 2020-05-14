@@ -20,14 +20,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-export interface PlainObject<T> {
-  [key: string]: T;
+function isTrue(val: any) {
+  return val && val.toString() === 'true';
 }
 
-interface FieldInfo {
-  min: number;
-  max: number;
-  alias?: PlainObject<number>;
+function dedupe(inArray: any[], keySupplier = (it: any) => it) {
+  const seen = new Set();
+  const deduped: any[] = [];
+
+  inArray.forEach((x: any) => {
+    const keyValue = keySupplier(x);
+    if (!seen.has(keyValue)) {
+      seen.add(keyValue);
+      deduped.push(x);
+    }
+  });
+
+  return deduped;
+}
+
+export interface PlainObject<T> {
+  [key: string]: T;
 }
 
 export interface ParseOptions {
@@ -52,12 +65,11 @@ const VAL_W = 'w';
 const VAL_S = '*';
 
 const PREDEFINED_EXPRS: PlainObject<string> = {
-  '@every_min': '* * * *',
-  '@yearly': '0 0 1 1 *',
-  '@monthly': '0 0 1 * *',
-  '@weekly': '0 0 * * 0',
-  '@daily': '0 0 * * *',
-  '@hourly': '0 * * * *',
+  '@yearly': '0 0 1 1 ?',
+  '@monthly': '0 0 1 * ?',
+  '@weekly': '0 0 ? * 0',
+  '@daily': '0 0 * * ?',
+  '@hourly': '0 * * * ?',
 };
 
 const FLD_SECOND = 'second';
@@ -69,6 +81,12 @@ const FLD_DAY_OF_WEEK = 'day_of_week';
 const FLD_YEAR = 'year';
 
 const FIELDS_LIST = [FLD_SECOND, FLD_MINUTE, FLD_HOUR, FLD_DAY_OF_MONTH, FLD_MONTH, FLD_DAY_OF_WEEK, FLD_YEAR];
+
+interface FieldInfo {
+  min: number;
+  max: number;
+  alias?: PlainObject<number>;
+}
 
 const FIELD_INFO: PlainObject<FieldInfo> = {
   [FLD_SECOND]: {
@@ -384,46 +402,21 @@ function createFieldValue(
   return resp;
 }
 
-export function isTrue(val: any) {
-  return val && val.toString() === 'true';
-}
-
-export function dedupe(inArray: any[], keySupplier = (it: any) => it) {
-  const seen = new Set();
-  const deduped: any[] = [];
-
-  inArray.forEach((x: any) => {
-    const keyValue = keySupplier(x);
-    if (!seen.has(keyValue)) {
-      seen.add(keyValue);
-      deduped.push(x);
-    }
-  });
-
-  return deduped;
-}
-
 export function parse(expr: string, options: ParseOptions = {}) {
   if (!expr) {
     throw new Error(`Cron expression cannot be blank`);
   }
 
+  let hasSeconds = isTrue(options.hasSeconds);
   let exprInternal = expr;
 
-  // pre-defined values
   if (PREDEFINED_EXPRS[exprInternal]) {
     exprInternal = PREDEFINED_EXPRS[expr];
+    hasSeconds = false;
   }
 
-  // 1 second = optional
-  // 2 minute
-  // 3 hour
-  // 4 day of month
-  // 5 month
-  // 6 day of week = optional
-  // 7 year = optional
-  const minFields = 4 + (options.hasSeconds ? 1 : 0);
-  const maxFields = options.hasSeconds ? 7 : 6;
+  const minFields = hasSeconds ? 5 : 4;
+  const maxFields = hasSeconds ? 7 : 6;
 
   const parts = exprInternal
     .trim()
@@ -436,7 +429,7 @@ export function parse(expr: string, options: ParseOptions = {}) {
   }
 
   // If seconds is not specified, then defaults to 0th sec
-  if (!isTrue(options.hasSeconds)) {
+  if (!hasSeconds) {
     parts.unshift('0');
   }
 
