@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 import {DateTime} from 'luxon';
-import {CronExpr, CronField, PlainObject} from '@datasert/cron-parser';
+import {CronExpr, CronField, PlainObject, parse} from '@datasert/cron-parser';
 
 export interface EvalOptions {
   timezone?: string;
@@ -397,13 +397,14 @@ function getOutputTime(newTime: DateTime, options: EvalOptions) {
  * Note that it is assumed that cron expression is parsed using @datasert/cron-parser. Otherwise the results
  * are undefined.
  */
-export function getFutureMatches(expr: CronExpr, options: EvalOptions = {}): string[] {
+export function getFutureMatches(expr: CronExpr | string, options: EvalOptions = {}): string[] {
   const dtoptions = {zone: options.timezone || TZ_UTC};
   const startTime = DateTime.fromISO(options.startAt ? options.startAt : new Date().toISOString(), dtoptions);
   const endTime = options.endAt ? DateTime.fromISO(options.endAt, dtoptions) : undefined;
   const count = options.count || 5;
   const nextTimes: string[] = [];
-  const timeSeries = getTimeSeries(expr, startTime);
+  const cronExpr = typeof expr === 'string' ? parse(expr) : expr;
+  const timeSeries = getTimeSeries(cronExpr, startTime);
 
   const maxLoopCount = options.maxLoopCount || MAX_LOOP_COUNT;
   let loopCount = 0;
@@ -419,7 +420,7 @@ export function getFutureMatches(expr: CronExpr, options: EvalOptions = {}): str
       continue;
     }
 
-    if (isExprMatches(expr, newTime)) {
+    if (isExprMatches(cronExpr, newTime)) {
       nextTimes.push(getOutputTime(newTime, options));
     }
 

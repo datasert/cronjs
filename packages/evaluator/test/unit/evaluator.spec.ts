@@ -4,7 +4,7 @@ import {EvalOptions} from '../../src/evaluator';
 
 function expectFutureMatches(expr: string, runTimes: string[], evalOptions?: EvalOptions) {
   const output = subject.getFutureMatches(
-    parse(expr),
+    expr,
     Object.assign({}, {startAt: '2020-01-01T00:00:00Z', count: runTimes.length}, evalOptions)
   );
   // console.log(`####### output [${expr}]`, JSON.stringify(output));
