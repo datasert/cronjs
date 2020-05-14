@@ -1,0 +1,60 @@
+{
+  "name": "@datasert/cronjs-evaluator",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Santhosh Kumar <brsanthu@gmail.com>",
+  "homepage": "https://github.com/datasert/cronjs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datasert/cronjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/datasert/cronjs/issues"
+  },
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint --ext .js,.ts src",
+    "clean": "rm -rf dist && rm -rf coverage && rm -rf yarn-error.log",
+    "compile": "tsc",
+    "cleancompile": "yarn clean && yarn compile",
+    "compile:watch": "tsc --watch",
+    "build": "yarn clean && yarn compile",
+    "prepublish": "yarn build",
+    "test": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js",
+    "test:watch": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js --watch"
+  },
+  "dependencies": {
+    "@datasert/cron-parser": "^0.0.1",
+    "luxon": "^1.24.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^1.24.0"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "roots": [
+      "test"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/test/unit/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "testTimeout": 120000
+  }
+}

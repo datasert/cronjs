@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "charset": "utf-8",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": ["ES2019", "es2020.promise"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "pretty": false,
+    "sourceMap": true,
+    "inlineSources": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "stripInternal": true,
+    "target": "ES2019",
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.js"],
+  "exclude": ["node_modules"]
+}

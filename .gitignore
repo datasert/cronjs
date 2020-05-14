@@ -1,0 +1,17 @@
+.DS_Store
+.thumbs.db
+node_modules
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.history
+coverage
+dist
