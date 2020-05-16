@@ -1,8 +1,8 @@
 import {parse} from '@datasert/cronjs-parser';
-import * as subject from '../../src/evaluator';
-import {EvalOptions} from '../../src/evaluator';
+import * as subject from '../../src/matcher';
+import {MatchOptions} from '../../src/matcher';
 
-function expectFutureMatches(expr: string, runTimes: string[], evalOptions?: EvalOptions) {
+function expectFutureMatches(expr: string, runTimes: string[], evalOptions?: MatchOptions) {
   const output = subject.getFutureMatches(
     expr,
     Object.assign({}, {startAt: '2020-01-01T00:00:00Z', count: runTimes.length}, evalOptions)

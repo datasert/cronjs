@@ -23,7 +23,7 @@
 import {DateTime} from 'luxon';
 import {CronExpr, CronExprs, CronField, PlainObject, parse} from '@datasert/cronjs-parser';
 
-export interface EvalOptions {
+export interface MatchOptions {
   timezone?: string;
   startAt?: string;
   endAt?: string;
@@ -502,7 +502,7 @@ function isExprMatches(expr: CronExpr, startTime: DateTime) {
   return isDayOfMonthMatches(expr, FLD_DAY_OF_MONTH, startTime) || isDayOfWeekMatches(expr, FLD_DAY_OF_WEEK, startTime);
 }
 
-function getOutputTime(newTime: DateTime, options: EvalOptions) {
+function getOutputTime(newTime: DateTime, options: MatchOptions) {
   if (options.formatInTimezone) {
     return newTime.toISO({suppressMilliseconds: true});
   } else {
@@ -515,7 +515,7 @@ function getOutputTime(newTime: DateTime, options: EvalOptions) {
  * Note that it is assumed that cron expression is parsed using @datasert/cron-parser. Otherwise the results
  * are undefined.
  */
-export function getFutureMatches(expr: CronExprs | string, options: EvalOptions = {}): string[] {
+export function getFutureMatches(expr: CronExprs | string, options: MatchOptions = {}): string[] {
   const dtoptions = {zone: options.timezone || TZ_UTC};
   const startTime = DateTime.fromISO(options.startAt ? options.startAt : new Date().toISOString(), dtoptions);
   const endTime = options.endAt ? DateTime.fromISO(options.endAt, dtoptions) : undefined;

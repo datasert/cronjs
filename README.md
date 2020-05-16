@@ -12,7 +12,7 @@ It consists of following packages:
 
   This package helps parse the cron expression and produces compiled cron expression object. As part of parsing, it validates the expressions and throws errors with meaningful messages.
 
-- Evaluator
+- Matcher
 
   This package helps evaluate the parsed cron expression and find the matching times. It allows to match future matches, if a time matches the cron, past time matches (tbi)
 
@@ -155,8 +155,9 @@ Some noteworthy things about this parser.
 
 - Supports parsing all aspects of cron expressions as explained above
 - Parses to a plain javascript object which can be externally consumed or saved for reuse
+- Supports multi-cron expressions using `|` separator
 - Zero external dependencies
-- Pretty fast
+- Pretty fast (1000 parses per second)
 
 ### Usage
 
@@ -197,6 +198,14 @@ const parsedExpr = parse('0 0 10 ? * MON-FRI', {hasSeconds: true});
 If there are any errors, then it will throw an javascript Error with message indicating what is wrong. If `parse` method returns successfully,
 then your cron expression is fine.
 
-## Evaluator
+## Matcher
 
-### Usage
+Matcher helps parse the cron expression and produces compiled cron expression object. As part of parsing, it validates the expressions and throws errors with meaningful messages.
+
+Some noteworthy things about this parser.
+
+- Supports parsing all aspects of cron expressions as explained above
+- Parses to a plain javascript object which can be externally consumed or saved for reuse
+- Supports multi-cron expressions using `|` separator
+- Zero external dependencies
+- Pretty fast (1000 parses per second)

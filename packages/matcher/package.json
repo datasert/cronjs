@@ -1,5 +1,5 @@
 {
-  "name": "@datasert/cronjs-evaluator",
+  "name": "@datasert/cronjs-matcher",
   "version": "0.0.1",
   "description": "",
   "author": "Santhosh Kumar <brsanthu@gmail.com>",
