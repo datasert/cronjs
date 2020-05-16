@@ -265,11 +265,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@datasert/cron-parser@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@datasert/cron-parser/-/cron-parser-0.0.4.tgz#fd6f60293a1f37ee16163e7fb81b35ff2116eb74"
-  integrity sha512-Bj+kTNuWBU64iqjyL6c5mn3anb/V411j5dfnYIrqWaf2NSk0mcaX9YdtPRc+lY8pVcaTc5IXh9lpinAVYrQvTw==
-
 "@evocateur/libnpmaccess@^3.1.2":
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@evocateur/libnpmaccess/-/libnpmaccess-3.1.2.tgz#ecf7f6ce6b004e9f942b098d92200be4a4b1c845"

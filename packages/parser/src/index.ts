@@ -1,1 +1,1 @@
-export {parse, ParseOptions, CronExpr, CronField, PlainObject} from './parser';
+export {parse, ParseOptions, CronExpr, CronExprs, CronField, PlainObject} from './parser';

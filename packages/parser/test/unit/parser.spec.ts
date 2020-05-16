@@ -17,14 +17,14 @@ function parseError(expr: string, msg: string) {
   expect(() => subject.parse(expr)).toThrow(msg);
 }
 
-function parse(expr: string, expected: any) {
+function expectExpr(expr: string, expected: any) {
   for (const field of FIELDS_LIST) {
     if (expected[field]) {
       continue;
     }
 
     if (field === FLD_SECOND) {
-      expected[field] = {values: [0]};
+      expected[field] = {omit: true};
     } else if (field === FLD_DAY_OF_WEEK) {
       expected[field] = {omit: true};
     } else {
@@ -33,297 +33,378 @@ function parse(expr: string, expected: any) {
   }
 
   const output = subject.parse(expr);
+  delete output.pattern;
   // console.log(`####### output [${expr}]`, JSON.stringify(output));
-  expect(output).toEqual(expected);
+  expect(output).toEqual({expressions: [expected]});
 }
 
 describe('valid expressions', () => {
   it('every minute', () => {
-    parse('* * * *', {});
+    expectExpr('* * * *', {});
   });
 
   it('minute: range', () => {
-    parse('0-12 * * *', {
-      minute: {values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]},
+    expectExpr('0-12 * * *', {
+      minute: {ranges: [{from: 0, to: 12}]},
     });
   });
 
   it('minute: multiple ranges', () => {
-    parse('0-12,20-30 * * *', {
-      minute: {values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]},
+    expectExpr('0-12,20-30 * * *', {
+      minute: {
+        ranges: [
+          {from: 0, to: 12},
+          {from: 20, to: 30},
+        ],
+      },
     });
   });
 
   it('minute: multiple ranges out of order', () => {
-    parse('20-30,0-12 * * *', {
-      minute: {values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]},
+    expectExpr('20-30,0-12 * * *', {
+      minute: {
+        ranges: [
+          {from: 20, to: 30},
+          {from: 0, to: 12},
+        ],
+      },
+    });
+  });
+
+  it('minute: multiple ranges deduped', () => {
+    expectExpr('20-30,0-12,0-12,20-30 * * *', {
+      minute: {
+        ranges: [
+          {from: 20, to: 30},
+          {from: 0, to: 12},
+        ],
+      },
     });
   });
 
   it('minute: multiple ranges along with single values', () => {
-    parse('20-30,0-12,55,56 * * *', {
-      minute: {values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 55, 56]},
+    expectExpr('20-30,0-12,55,56 * * *', {
+      minute: {
+        ranges: [
+          {from: 20, to: 30},
+          {from: 0, to: 12},
+        ],
+        values: [55, 56],
+      },
     });
   });
 
   it('minute: steps', () => {
-    parse('0/5 * * *', {
-      minute: {values: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]},
+    expectExpr('0/5 * * *', {
+      minute: {steps: [{from: 0, to: 59, step: 5}]},
     });
   });
 
   it('minute: steps with * as starting value', () => {
-    parse('*/5 * * *', {
-      minute: {values: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]},
+    expectExpr('*/5 * * *', {
+      minute: {steps: [{from: 0, to: 59, step: 5}]},
     });
   });
 
   it('minute: range steps', () => {
-    parse('0-17/5 * * *', {
-      minute: {values: [0, 5, 10, 15]},
+    expectExpr('0-17/5 * * *', {
+      minute: {steps: [{from: 0, to: 17, step: 5}]},
+    });
+  });
+
+  it('minute: range steps mid start', () => {
+    expectExpr('10-17/5 * * *', {
+      minute: {steps: [{from: 10, to: 17, step: 5}]},
     });
   });
 
   it('minute: multiple steps', () => {
-    parse('0/5,1/5 * * *', {
-      minute: {values: [0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 31, 35, 36, 40, 41, 45, 46, 50, 51, 55, 56]},
+    expectExpr('0/5,1/5 * * *', {
+      minute: {
+        steps: [
+          {from: 0, to: 59, step: 5},
+          {from: 1, to: 59, step: 5},
+        ],
+      },
     });
   });
 
   it('minute: multiple range steps', () => {
-    parse('0-17/5,20-30/2 * * *', {
-      minute: {values: [0, 5, 10, 15, 20, 22, 24, 26, 28, 30]},
+    expectExpr('0-17/5,20-30/2 * * *', {
+      minute: {
+        steps: [
+          {from: 0, to: 17, step: 5},
+          {from: 20, to: 30, step: 2},
+        ],
+      },
     });
   });
 
-  it('minute: odd steps1', () => {
-    parse('0/11 * * *', {
-      minute: {values: [0, 11, 22, 33, 44, 55]},
-    });
-  });
-
-  it('minute: odd steps2', () => {
-    parse('0/17 * * *', {
-      minute: {values: [0, 17, 34, 51]},
+  it('minute: odd steps', () => {
+    expectExpr('0/17 * * *', {
+      minute: {
+        steps: [{from: 0, to: 59, step: 17}],
+      },
     });
   });
 
   it('day of month: last day of month', () => {
-    parse('* * L *', {
-      day_of_month: {last: true},
+    expectExpr('* * L *', {
+      day_of_month: {lastDay: true},
     });
   });
 
   it('day of month: last weekday of month', () => {
-    parse('* * LW *', {
-      day_of_month: {last: true, weekday: true},
+    expectExpr('* * LW *', {
+      day_of_month: {lastWeekday: true},
     });
   });
 
-  it('day of month: weekday of month', () => {
-    parse('* * w *', {
-      day_of_month: {weekday: true},
+  it('day of month: last weekday of month (case insensitive)', () => {
+    expectExpr('* * lw *', {
+      day_of_month: {lastWeekday: true},
     });
   });
 
   it('day of month: range', () => {
-    parse('* * 1-5 *', {
-      day_of_month: {values: [1, 2, 3, 4, 5]},
+    expectExpr('* * 1-5 *', {
+      day_of_month: {ranges: [{from: 1, to: 5}]},
     });
   });
 
   it('day of month: multiple ranges', () => {
-    parse('* * 1-5,9-15 *', {
-      day_of_month: {values: [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15]},
+    expectExpr('* * 1-5,9-15 *', {
+      day_of_month: {
+        ranges: [
+          {from: 1, to: 5},
+          {from: 9, to: 15},
+        ],
+      },
     });
   });
 
   it('day of month: steps', () => {
-    parse('* * 3/7 *', {
-      day_of_month: {values: [3, 10, 17, 24, 31]},
+    expectExpr('* * 3/7 *', {
+      day_of_month: {
+        steps: [{from: 3, to: 31, step: 7}],
+      },
     });
   });
 
   it('day of month: values', () => {
-    parse('* * 3,5 *', {
+    expectExpr('* * 3,5 *', {
       day_of_month: {values: [3, 5]},
     });
   });
 
   it('day of month: values with steps', () => {
-    parse('* * 3,5,1/3 *', {
-      day_of_month: {values: [1, 3, 4, 5, 7, 10, 13, 16, 19, 22, 25, 28, 31]},
+    expectExpr('* * 3,5,1/3 *', {
+      day_of_month: {
+        steps: [{from: 1, to: 31, step: 3}],
+        values: [3, 5],
+      },
     });
   });
 
   it('day of month: weekday near to 20th', () => {
-    parse('* * 20W *', {
-      day_of_month: {values: [20], weekday: true},
+    expectExpr('* * 20W *', {
+      day_of_month: {nearestWeekdays: [20]},
     });
   });
 
   it('month: alias', () => {
-    parse('* * * jan', {
-      month: {values: [1]},
+    expectExpr('* * * jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec', {
+      month: {values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]},
     });
   });
 
   it('month: alias range', () => {
-    parse('* * * jan-mar', {
-      month: {values: [1, 2, 3]},
+    expectExpr('* * * jan-dec', {
+      month: {ranges: [{from: 1, to: 12}]},
     });
   });
 
   it('month: alias range and alias value', () => {
-    parse('* * * jan-mar,dec', {
-      month: {values: [1, 2, 3, 12]},
-    });
-  });
-
-  it('month: alias range and alias value', () => {
-    parse('* * * jan-mar,dec', {
-      month: {values: [1, 2, 3, 12]},
+    expectExpr('* * * jan-mar,dec', {
+      month: {values: [12], ranges: [{from: 1, to: 3}]},
     });
   });
 
   it('month: value', () => {
-    parse('* * * 1,2', {
+    expectExpr('* * * 1,2', {
       month: {values: [1, 2]},
     });
   });
 
   it('month: value range', () => {
-    parse('* * * 1-3', {
-      month: {values: [1, 2, 3]},
+    expectExpr('* * * 1-3', {
+      month: {ranges: [{from: 1, to: 3}]},
     });
   });
 
   it('month: value ranges', () => {
-    parse('* * * 1-3,7-9', {
-      month: {values: [1, 2, 3, 7, 8, 9]},
+    expectExpr('* * * 1-3,7-9', {
+      month: {
+        ranges: [
+          {from: 1, to: 3},
+          {from: 7, to: 9},
+        ],
+      },
     });
   });
 
-  it('month: alias value steps', () => {
-    parse('* * * jan/3', {
-      month: {values: [1, 4, 7, 10]},
+  it('month: alias steps', () => {
+    expectExpr('* * * jan/3', {
+      month: {steps: [{from: 1, to: 12, step: 3}]},
     });
   });
 
   it('month: alias mixed case', () => {
-    parse('* * * jan,FEB,mAR', {
+    expectExpr('* * * jan,FEB,mAR', {
       month: {values: [1, 2, 3]},
     });
   });
 
   it('day of week: omit', () => {
-    parse('* * * * ?', {
+    expectExpr('* * * * ?', {
       day_of_week: {omit: true},
     });
   });
 
   it('day of week: all', () => {
-    parse('* * * * *', {
+    expectExpr('* * * * *', {
       day_of_week: {all: true},
     });
   });
 
   it('day of week: nth day of month', () => {
-    parse('* * * * sun#2', {
-      day_of_week: {values: [0], nth: 2},
+    expectExpr('* * * * sun#2', {
+      day_of_week: {nthDays: [{day_of_week: 0, instance: 2}]},
     });
   });
 
   it('day of week: alias mixed case', () => {
-    parse('* * * * Mon,TUE,wEd', {
+    expectExpr('* * ? * Mon,TUE,wEd', {
+      day_of_month: {omit: true},
       day_of_week: {values: [1, 2, 3]},
     });
   });
 
   it('day of week: 0 or 7 for Sun', () => {
-    parse('* * * * sun', {
+    expectExpr('* * ? * sun', {
+      day_of_month: {omit: true},
       day_of_week: {values: [0]},
     });
-    parse('* * * * 0', {
+    expectExpr('* * ? * 0', {
+      day_of_month: {omit: true},
       day_of_week: {values: [0]},
     });
-    parse('* * * * 7', {
+    expectExpr('* * ? * 7', {
+      day_of_month: {omit: true},
       day_of_week: {values: [0]},
     });
-    parse('* * * * 7,0', {
+    expectExpr('* * ? * 7,0', {
+      day_of_month: {omit: true},
       day_of_week: {values: [0]},
     });
   });
 
   it('day of week: last sun of month', () => {
-    parse('* * * * sunl', {
-      day_of_week: {values: [0], last: true},
+    expectExpr('* * * * sunl', {
+      day_of_week: {lastDays: [0]},
     });
   });
 
   it('day of week: Sun is decoded as 0', () => {
-    parse('* * * * SUN,sun,Sun', {
+    expectExpr('* * * * SUN,sun,Sun', {
       day_of_week: {values: [0]},
     });
   });
 
   it('day of week: First sun', () => {
-    parse('* * ? * 0#1', {
+    expectExpr('* * ? * 0#1', {
       day_of_month: {omit: true},
-      day_of_week: {values: [0], nth: 1},
+      day_of_week: {nthDays: [{day_of_week: 0, instance: 1}]},
     });
   });
 
   it('day of week: 5th Mon', () => {
-    parse('* * ? * 1#5', {
+    expectExpr('* * ? * 1#5', {
       day_of_month: {omit: true},
-      day_of_week: {values: [1], nth: 5},
-    });
-  });
-
-  it('day of week: 5th Mon', () => {
-    parse('* * ? * 1#5', {
-      day_of_month: {omit: true},
-      day_of_week: {values: [1], nth: 5},
+      day_of_week: {nthDays: [{day_of_week: 1, instance: 5}]},
     });
   });
 
   it('day of week: last sat of month', () => {
-    parse('* * ? * 6L', {
+    expectExpr('* * ? * 6L', {
       day_of_month: {omit: true},
-      day_of_week: {values: [6], last: true},
+      day_of_week: {lastDays: [6]},
     });
   });
 
   it('day of week: first mon of year', () => {
-    parse('0 0 ? jan 1#1', {
-      second: {values: [0]},
+    expectExpr('0 0 ? jan 1#1', {
       minute: {values: [0]},
       hour: {values: [0]},
       day_of_month: {omit: true},
       month: {values: [1]},
-      day_of_week: {values: [1], nth: 1},
+      day_of_week: {nthDays: [{day_of_week: 1, instance: 1}]},
     });
   });
 
   it('day of week and day of month: 15th or Sun', () => {
-    parse('* * 15 * sun', {
+    expectExpr('* * 15 * sun', {
       day_of_month: {values: [15]},
       day_of_week: {values: [0]},
     });
   });
 
   it('day of week and day of month: omit day of month', () => {
-    parse('* * ? * sun', {
+    expectExpr('* * ? * sun', {
+      day_of_month: {omit: true},
+      day_of_week: {values: [0]},
+    });
+  });
+});
+
+describe('pre-defined expressions', () => {
+  it('@yearly', () => {
+    expectExpr('@yearly', {
+      minute: {values: [0]},
+      hour: {values: [0]},
+      day_of_month: {values: [1]},
+      month: {values: [1]},
+    });
+  });
+
+  it('@monthly', () => {
+    expectExpr('@monthly', {
+      minute: {values: [0]},
+      hour: {values: [0]},
+      day_of_month: {values: [1]},
+    });
+  });
+
+  it('@weekly', () => {
+    expectExpr('@weekly', {
+      minute: {values: [0]},
+      hour: {values: [0]},
       day_of_month: {omit: true},
       day_of_week: {values: [0]},
     });
   });
 
-  it('day of week and day of month: 15th or Sun', () => {
-    parse('* * 15 * sun', {
-      day_of_month: {values: [15]},
-      day_of_week: {values: [0]},
+  it('@daily', () => {
+    expectExpr('@daily', {
+      minute: {values: [0]},
+      hour: {values: [0]},
+      day_of_month: {all: true},
+    });
+  });
+
+  it('@hourly', () => {
+    expectExpr('@hourly', {
+      minute: {values: [0]},
     });
   });
 });
@@ -355,5 +436,41 @@ describe('invalid expressions', () => {
       '60 * ? * *',
       'Invalid cron expression [60 * ? * *]. Value [60] out of range for field [minute]. It must be less than or equals to [59].'
     );
+  });
+});
+
+describe('multi cron expressions', () => {
+  it('multiple separated by |', () => {
+    expect(subject.parse('* 0-1,0-5/2 l,lw jan-dec 6#1|0,5 0-1,0-5/2 l,lw jan-dec 6#1')).toEqual({
+      pattern: '* 0-1,0-5/2 l,lw jan-dec 6#1|0,5 0-1,0-5/2 l,lw jan-dec 6#1',
+      expressions: [
+        {
+          second: {omit: true},
+          minute: {all: true},
+          hour: {ranges: [{from: 0, to: 1}], steps: [{from: 0, to: 5, step: 2}]},
+          day_of_month: {lastDay: true, lastWeekday: true},
+          month: {ranges: [{from: 1, to: 12}]},
+          day_of_week: {nthDays: [{day_of_week: 6, instance: 1}]},
+          year: {all: true},
+        },
+        {
+          second: {omit: true},
+          minute: {values: [0, 5]},
+          hour: {ranges: [{from: 0, to: 1}], steps: [{from: 0, to: 5, step: 2}]},
+          day_of_month: {lastDay: true, lastWeekday: true},
+          month: {ranges: [{from: 1, to: 12}]},
+          day_of_week: {nthDays: [{day_of_week: 6, instance: 1}]},
+          year: {all: true},
+        },
+      ],
+    });
+  });
+});
+
+describe('parsing performance (10000 parses)', () => {
+  it('time to parse', () => {
+    for (let i = 0; i < 10000; i++) {
+      subject.parse('* 0-1,0-5/2 l,lw jan-dec 6#1');
+    }
   });
 });

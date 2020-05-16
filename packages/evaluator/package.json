@@ -32,7 +32,7 @@
     "test:watch": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
-    "@datasert/cron-parser": "^0.0.1",
+    "@datasert/cronjs-parser": "^0.0.1",
     "luxon": "^1.24.1"
   },
   "devDependencies": {

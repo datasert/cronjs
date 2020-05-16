@@ -1,4 +1,4 @@
-import {parse} from '@datasert/cron-parser';
+import {parse} from '@datasert/cronjs-parser';
 import * as subject from '../../src/evaluator';
 import {EvalOptions} from '../../src/evaluator';
 
@@ -432,7 +432,7 @@ describe('getFutureMatches', () => {
   });
 });
 
-describe('getNextRunTimes with timezones', () => {
+describe('getFutureMatches with timezones', () => {
   it('1 am every day in pacific', () => {
     expectFutureMatches('0 1 * *', ['2020-01-01T09:00:00Z', '2020-01-02T09:00:00Z'], {timezone: 'America/Los_Angeles'});
   });
