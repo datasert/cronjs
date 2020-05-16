@@ -439,17 +439,20 @@ function isDayOfMonthMatches(expr: CronExpr, field: string, time: DateTime) {
   }
 
   // Last week day of month
-  if (info.lastWeekday) {
-    return time.day === getLastWeekDay(time);
+  if (info.lastWeekday && time.day === getLastWeekDay(time)) {
+    return true;
   }
 
   // last day of month
-  if (info.lastDay) {
-    return time.day === getLastDay(time);
+  if (info.lastDay && time.day === getLastDay(time)) {
+    return true;
   }
 
-  if (!isBlank(info.nearestWeekdays)) {
-    return info.nearestWeekdays!!.find((day) => isNearestWeekDay(time, day)) !== undefined;
+  if (
+    !isBlank(info.nearestWeekdays) &&
+    info.nearestWeekdays!!.find((day) => isNearestWeekDay(time, day)) !== undefined
+  ) {
+    return true;
   }
 
   // finally we will do usual values check
@@ -462,23 +465,25 @@ function isDayOfWeekMatches(expr: CronExpr, field: string, time: DateTime) {
     return false;
   }
 
-  if (info.lastDay) {
-    return getWeekDay(time) === DAY_SAT;
+  if (info.lastDay && getWeekDay(time) === DAY_SAT) {
+    return true;
   }
 
-  if (!isBlank(info.lastDays)) {
+  if (!isBlank(info.lastDays) && info.lastDays!!.find((day) => time.day === getLastDay(time, day)) !== undefined) {
     // Last day of kind
-    return info.lastDays!!.find((day) => time.day === getLastDay(time, day)) !== undefined;
+    return true;
   }
 
   // nth day
   if (!isBlank(info.nthDays)) {
-    return (
+    if (
       info.nthDays!!.find((nthDay) => {
         const days = getDaysOfType(time, nthDay.day_of_week);
         return days.length > nthDay.instance && days[nthDay.instance - 1] === time.day;
       }) !== undefined
-    );
+    ) {
+      return true;
+    }
   }
 
   // finally we will do usual values check
