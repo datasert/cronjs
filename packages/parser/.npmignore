@@ -1,0 +1,6 @@
+.history
+./src
+node_modules
+.*
+index.ts
+coverage
