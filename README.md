@@ -200,12 +200,92 @@ then your cron expression is fine.
 
 ## Matcher
 
-Matcher helps parse the cron expression and produces compiled cron expression object. As part of parsing, it validates the expressions and throws errors with meaningful messages.
+Matcher finds the times matching the cron expressions. It can be used to match future matches, and if time matches a cron expression.
 
-Some noteworthy things about this parser.
+Some noteworthy things about this matcher.
 
 - Supports parsing all aspects of cron expressions as explained above
-- Parses to a plain javascript object which can be externally consumed or saved for reuse
 - Supports multi-cron expressions using `|` separator
-- Zero external dependencies
-- Pretty fast (1000 parses per second)
+- Single dependency on `luxon`
+
+### Setup
+
+Add matcher package to your project.
+
+```
+yarn add @datasert/cronjs-matcher
+
+or
+
+npm add @datasert/cronjs-matcher --save-dev
+```
+
+Import into your code
+
+```javascript
+import * as cronjsMatcher from `@datasert/cronjs-matcher`
+```
+
+Below are various matcher methods.
+
+### APIs
+
+#### `getFutureMatches(expr: CronExprs | string, options?: MatchOptions)`
+
+This method is used to find future matches starting from given datetime (inclusive). By default it returns upto 5 matches.
+If you want more or less, you can specify the count using options.
+
+```javascript
+const futureMatches = cronjsMatcher.getFutureMatches('0/2 * * *', {startAt: '2020-01-01T00:00:00Z'});
+console.log(futureMatches);
+```
+
+prints:
+
+```shell
+[
+'2020-01-01T00:00:00Z',
+'2020-01-01T00:12:00Z',
+'2020-01-01T00:24:00Z',
+'2020-01-01T00:36:00Z',
+'2020-01-01T00:48:00Z',
+]
+```
+
+Second argument is `MatchOptions` with any of following fields.
+
+| Field            | Type    | Default Value | Description                                                                                                                           |
+| ---------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| timezone         | string  | Etc/UTC       | Indicates the timezone of the cron expression                                                                                         |
+| startAt          | string  | Current Time  | The date/time in ISO8601 format to where to start the matching from (inclusive)                                                       |
+| endAt            | string  |               | The last date time (exclusive) to match                                                                                               |
+| matchCount       | number  | 5             | Number of matches to return                                                                                                           |
+| formatInTimezone | boolean | false         | If set to true, then returned time strings will be formatted in the given timezone. Otherwise, they will be formatted in UTC timezone |
+| maxLoopCount     | number  | 10,000        | Max number of time matches to compute. This is kind of safe guard boundary                                                            |
+
+#### `isTimeMatches(expr: CronExprs | string, time: string, timezone?: string)`
+
+This method allows you to compare if given time would be matched by given cron expressions.
+
+```javascript
+console.log(cronjsMatcher.isTimeMatches('0 0 l * ?', '2020-02-28T00:00:00Z'));
+console.log(cronjsMatcher.isTimeMatches('0 0 l * ?', '2020-02-29T00:00:00Z'));
+```
+
+prints:
+
+```shell
+false
+true
+```
+
+Second argument is `MatchOptions` with any of following fields.
+
+| Field            | Type    | Default Value | Description                                                                                                                           |
+| ---------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| timezone         | string  | Etc/UTC       | Indicates the timezone of the cron expression                                                                                         |
+| startAt          | string  | Current Time  | The date/time in ISO8601 format to where to start the matching from (inclusive)                                                       |
+| endAt            | string  |               | The last date time (exclusive) to match                                                                                               |
+| matchCount       | number  | 5             | Number of matches to return                                                                                                           |
+| formatInTimezone | boolean | false         | If set to true, then returned time strings will be formatted in the given timezone. Otherwise, they will be formatted in UTC timezone |
+| maxLoopCount     | number  | 10,000        | Max number of time matches to compute. This is kind of safe guard boundary                                                            |

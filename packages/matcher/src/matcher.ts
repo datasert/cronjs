@@ -27,7 +27,7 @@ export interface MatchOptions {
   timezone?: string;
   startAt?: string;
   endAt?: string;
-  count?: number;
+  matchCount?: number;
   formatInTimezone?: boolean;
   maxLoopCount?: number;
 }
@@ -506,6 +506,10 @@ function isExprMatches(expr: CronExpr, startTime: DateTime) {
   return isDayOfMonthMatches(expr, FLD_DAY_OF_MONTH, startTime) || isDayOfWeekMatches(expr, FLD_DAY_OF_WEEK, startTime);
 }
 
+function isExprsMatches(exprs: CronExprs, time: DateTime): boolean {
+  return exprs.expressions.find((expr: CronExpr) => isExprMatches(expr, time)) !== undefined;
+}
+
 function getOutputTime(newTime: DateTime, options: MatchOptions) {
   if (options.formatInTimezone) {
     return newTime.toISO({suppressMilliseconds: true});
@@ -523,7 +527,7 @@ export function getFutureMatches(expr: CronExprs | string, options: MatchOptions
   const dtoptions = {zone: options.timezone || TZ_UTC};
   const startTime = DateTime.fromISO(options.startAt ? options.startAt : new Date().toISOString(), dtoptions);
   const endTime = options.endAt ? DateTime.fromISO(options.endAt, dtoptions) : undefined;
-  const count = options.count || 5;
+  const count = options.matchCount || 5;
   const nextTimes: string[] = [];
   const cronExprs = simplifyExprs(typeof expr === 'string' ? parse(expr) : deepClone(expr));
   const timeSeries = getTimeSeries(cronExprs, startTime);
@@ -543,7 +547,7 @@ export function getFutureMatches(expr: CronExprs | string, options: MatchOptions
     }
 
     // console.log('####### checking time', newTime.toISO());
-    if (cronExprs.expressions.find((expr: CronExpr) => isExprMatches(expr, newTime))) {
+    if (isExprsMatches(cronExprs, newTime)) {
       nextTimes.push(getOutputTime(newTime, options));
     }
 
@@ -555,7 +559,8 @@ export function getFutureMatches(expr: CronExprs | string, options: MatchOptions
   return nextTimes;
 }
 
-export function isTimeMatches(expr: CronExpr, time: string, timezone?: string): boolean {
-  let startTime = DateTime.fromISO(time, {zone: timezone || TZ_UTC});
-  return isExprMatches(expr, startTime) || false;
+export function isTimeMatches(exprs: CronExprs | string, time: string, timezone?: string): boolean {
+  const cronExprs = simplifyExprs(typeof exprs === 'string' ? parse(exprs) : deepClone(exprs));
+  const startTime = DateTime.fromISO(time, {zone: timezone || TZ_UTC});
+  return isExprsMatches(cronExprs, startTime);
 }

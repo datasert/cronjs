@@ -5,7 +5,7 @@ import {MatchOptions} from '../../src/matcher';
 function expectFutureMatches(expr: string, runTimes: string[], evalOptions?: MatchOptions) {
   const output = subject.getFutureMatches(
     expr,
-    Object.assign({}, {startAt: '2020-01-01T00:00:00Z', count: runTimes.length}, evalOptions)
+    Object.assign({}, {startAt: '2020-01-01T00:00:00Z', matchCount: runTimes.length}, evalOptions)
   );
   // console.log(`####### output [${expr}]`, JSON.stringify(output));
   expect(output).toEqual(runTimes);
@@ -45,7 +45,7 @@ describe('getFutureMatches', () => {
     ]);
   });
 
-  it('every uneven minute', () => {
+  it('every odd minute', () => {
     expectFutureMatches('1/2 * ? * *', [
       '2020-01-01T00:01:00Z',
       '2020-01-01T00:03:00Z',
@@ -504,4 +504,28 @@ describe('getFutureMatches - performance (1000 evals)', () => {
   it('cron: every day', () => checkPerformance('0 0 * * ?'));
   it('cron: every month', () => checkPerformance('0 0 1 * ?'));
   it('cron: every year', () => checkPerformance('0 0 1 1 ?'));
+});
+
+function checkTime(expr: string, times: string[], result: boolean) {
+  for (const time of times) {
+    expect(subject.isTimeMatches(expr, time)).toEqual(result);
+  }
+}
+describe.only('isTimeMatches', () => {
+  it('every minute', () => {
+    checkTime('* * * * ?', ['2020-01-01T00:00:00Z'], true);
+    checkTime('* * * * ?', ['2020-01-01T00:00:01Z'], false);
+  });
+
+  it('first monday of month', () => {
+    const pattern = '0 0 ? * 1#1';
+    checkTime(pattern, ['2020-01-01T00:00:00Z', '2020-01-13T00:00:00Z'], false); // wed, 2 mon
+    checkTime(pattern, ['2020-01-06T00:00:00Z'], true); // 1 mon
+  });
+
+  it('last day of month', () => {
+    const pattern = '0 0 l * ?';
+    checkTime(pattern, ['2020-01-31T00:00:00Z', '2020-02-29T00:00:00Z'], true);
+    checkTime(pattern, ['2020-02-28T00:00:00Z'], false);
+  });
 });
