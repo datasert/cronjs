@@ -1,6 +1,6 @@
 {
   "name": "@datasert/cronjs-matcher",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "author": "Santhosh Kumar <brsanthu@gmail.com>",
   "homepage": "https://github.com/datasert/cronjs",
@@ -32,7 +32,7 @@
     "test:watch": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
-    "@datasert/cronjs-parser": "^0.0.1",
+    "@datasert/cronjs-parser": "^0.0.2",
     "luxon": "^1.24.1"
   },
   "devDependencies": {

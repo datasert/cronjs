@@ -1,6 +1,6 @@
 {
   "name": "@datasert/cronjs-parser",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "author": "Santhosh Kumar <brsanthu@gmail.com>",
   "homepage": "https://github.com/datasert/cronjs",
