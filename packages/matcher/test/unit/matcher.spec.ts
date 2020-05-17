@@ -511,7 +511,7 @@ function checkTime(expr: string, times: string[], result: boolean) {
     expect(subject.isTimeMatches(expr, time)).toEqual(result);
   }
 }
-describe.only('isTimeMatches', () => {
+describe('isTimeMatches', () => {
   it('every minute', () => {
     checkTime('* * * * ?', ['2020-01-01T00:00:00Z'], true);
     checkTime('* * * * ?', ['2020-01-01T00:00:01Z'], false);
