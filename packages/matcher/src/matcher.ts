@@ -416,8 +416,12 @@ function isFieldMatches(expr: CronExpr, field: string, timeValue: number): boole
   }
 
   if (value.omit) {
-    // omit in second matches all but not in other fields (day of m and day of w)
-    return field === FLD_SECOND;
+    // omit in second matches only if second is zero.
+    if (field === FLD_SECOND) {
+      return timeValue === 0;
+    } else {
+      return false;
+    }
   }
 
   if (value.values && value.values.includes(timeValue)) {
