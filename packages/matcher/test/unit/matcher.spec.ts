@@ -472,13 +472,13 @@ describe('getFutureMatches with timezones', () => {
   });
 
   it('10 pm every day in pacific', () => {
-    expectFutureMatches('0 22 * *', ['2020-01-02T06:00:00Z', '2020-01-03T06:00:00Z'], {
+    expectFutureMatches('0 22 * *', ['2020-01-01T06:00:00Z', '2020-01-02T06:00:00Z'], {
       timezone: 'America/Los_Angeles',
     });
   });
 
   it('10 pm every day in pacific with output in pacific', () => {
-    expectFutureMatches('0 22 * *', ['2020-01-01T22:00:00-08:00', '2020-01-02T22:00:00-08:00'], {
+    expectFutureMatches('0 22 * *', ['2019-12-31T22:00:00-08:00', '2020-01-01T22:00:00-08:00'], {
       timezone: 'America/Los_Angeles',
       formatInTimezone: true,
     });
@@ -486,6 +486,38 @@ describe('getFutureMatches with timezones', () => {
 
   it('1 am every day in new york', () => {
     expectFutureMatches('0 1 * *', ['2020-01-01T06:00:00Z', '2020-01-02T06:00:00Z'], {timezone: 'America/New_York'});
+  });
+
+  it('start at specific date', () => {
+    expectFutureMatches('0/5 * * * *', ['2020-01-02T00:00:00Z', '2020-01-02T00:05:00Z'], {
+      startAt: '2020-01-02T00:00:00.000Z',
+    });
+  });
+
+  it('start at specific date2', () => {
+    expectFutureMatches('0/5 * * * *', ['2025-01-02T00:00:00Z', '2025-01-02T00:05:00Z'], {
+      startAt: '2025-01-02T00:00:00.000Z',
+    });
+  });
+
+  it('match validator', () => {
+    expectFutureMatches(
+      '0/5 * * * *',
+      [
+        '2020-01-02T00:05:00Z',
+        '2020-01-02T00:10:00Z',
+        '2020-01-02T00:15:00Z',
+        '2020-01-02T00:25:00Z',
+        '2020-01-02T00:30:00Z',
+      ],
+      {
+        matchCount: 5,
+        startAt: '2020-01-02T00:00:00.000Z',
+        matchValidator: (match) => {
+          return match != '2020-01-02T00:00:00Z' && match !== '2020-01-02T00:20:00Z';
+        },
+      }
+    );
   });
 });
 

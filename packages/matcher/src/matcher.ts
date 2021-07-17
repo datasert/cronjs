@@ -23,6 +23,10 @@
 import {DateTime} from 'luxon';
 import {CronExpr, CronExprs, CronField, PlainObject, parse} from '@datasert/cronjs-parser';
 
+export interface Func<I, O> {
+  (input: I): O;
+}
+
 export interface MatchOptions {
   timezone?: string;
   startAt?: string;
@@ -30,6 +34,7 @@ export interface MatchOptions {
   matchCount?: number;
   formatInTimezone?: boolean;
   maxLoopCount?: number;
+  matchValidator?: Func<string, boolean>;
 }
 
 interface FieldInfo {
@@ -37,7 +42,7 @@ interface FieldInfo {
   max: number;
 }
 
-const MAX_LOOP_COUNT = 10_000;
+const MAX_LOOP_COUNT = 100_000;
 const FLD_SECOND = 'second';
 const FLD_MINUTE = 'minute';
 const FLD_HOUR = 'hour';
@@ -139,16 +144,16 @@ function isBlank(values?: any[]) {
   return !values || values.length === 0;
 }
 
-function expandFields(exprs: CronExprs, field: string): number[] {
+function expandFields(exprs: CronExprs, field: string, startYear: number): number[] {
   const values: number[] = [];
   exprs.expressions.forEach((expr: CronExpr) => {
-    values.push(...expandField(expr, field));
+    values.push(...expandField(expr, field, startYear));
   });
 
   return values.length === 0 ? values : sort(dedupe(values));
 }
 
-function expandField(expr: CronExpr, field: string): number[] {
+function expandField(expr: CronExpr, field: string, startYear: number): number[] {
   const exprField = expr[field];
   if (exprField.omit) {
     return field === FLD_SECOND ? [0] : [];
@@ -171,7 +176,7 @@ function expandField(expr: CronExpr, field: string): number[] {
   const values = [...(exprField.values || [])];
 
   if (all) {
-    const from = field == FLD_YEAR ? new Date().getFullYear() : info.min;
+    const from = field == FLD_YEAR ? startYear : info.min;
     values.push(...getValues(from, info.max, 1));
     return values;
   }
@@ -197,7 +202,7 @@ function expandField(expr: CronExpr, field: string): number[] {
   return values;
 }
 
-function mergeExprs(exprs: CronExprs): CronExpr {
+function mergeExprs(exprs: CronExprs, startYear: number): CronExpr {
   const mergedExpr: PlainObject<CronField> = {};
   for (const field of FIELDS) {
     if (field === FLD_DAY_OF_WEEK || field === FLD_DAY_OF_MONTH) {
@@ -205,12 +210,14 @@ function mergeExprs(exprs: CronExprs): CronExpr {
     }
 
     mergedExpr[field] = {
-      values: expandFields(exprs, field),
+      values: expandFields(exprs, field, startYear),
     };
   }
 
   mergedExpr[FLD_DAY_OF_MONTH] = {
-    values: sort(dedupe([...expandFields(exprs, FLD_DAY_OF_MONTH), ...expandFields(exprs, FLD_DAY_OF_WEEK)])),
+    values: sort(
+      dedupe([...expandFields(exprs, FLD_DAY_OF_MONTH, startYear), ...expandFields(exprs, FLD_DAY_OF_WEEK, startYear)])
+    ),
   };
 
   return mergedExpr;
@@ -244,7 +251,7 @@ function setTime(time: DateTime, values: object): DateTime {
 }
 
 function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
-  const mergedExpr = mergeExprs(exprs);
+  const mergedExpr = mergeExprs(exprs, startTime.year);
   const startMillis = startTime.toMillis();
 
   let newTime = startTime;
@@ -548,7 +555,11 @@ export function getFutureMatches(expr: CronExprs | string, options: MatchOptions
 
     // console.log('####### checking time', newTime.toISO());
     if (isExprsMatches(cronExprs, newTime)) {
-      nextTimes.push(getOutputTime(newTime, options));
+      const time = getOutputTime(newTime, options);
+      const matchOk = options.matchValidator ? options.matchValidator(time) : true;
+      if (matchOk) {
+        nextTimes.push(time);
+      }
     }
 
     if (nextTimes.length >= count) {
