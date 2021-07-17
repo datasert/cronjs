@@ -254,14 +254,15 @@ prints:
 
 Second argument is `MatchOptions` with any of following fields.
 
-| Field            | Type    | Default Value | Description                                                                                                                           |
-| ---------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| timezone         | string  | Etc/UTC       | Indicates the timezone of the cron expression                                                                                         |
-| startAt          | string  | Current Time  | The date/time in ISO8601 format to where to start the matching from (inclusive)                                                       |
-| endAt            | string  |               | The last date time (exclusive) to match                                                                                               |
-| matchCount       | number  | 5             | Number of matches to return                                                                                                           |
-| formatInTimezone | boolean | false         | If set to true, then returned time strings will be formatted in the given timezone. Otherwise, they will be formatted in UTC timezone |
-| maxLoopCount     | number  | 10,000        | Max number of time matches to compute. This is kind of safe guard boundary                                                            |
+| Field            | Type                      | Default Value | Description                                                                                                                           |
+| ---------------- | ------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| timezone         | string                    | Etc/UTC       | Indicates the timezone of the cron expression                                                                                         |
+| startAt          | string                    | Current Time  | The date/time in ISO8601 format to where to start the matching from (inclusive)                                                       |
+| endAt            | string                    |               | The last date time (exclusive) to match                                                                                               |
+| matchCount       | number                    | 5             | Number of matches to return                                                                                                           |
+| formatInTimezone | boolean                   | false         | If set to true, then returned time strings will be formatted in the given timezone. Otherwise, they will be formatted in UTC timezone |
+| maxLoopCount     | number                    | 10,000        | Max number of time matches to compute. This is kind of safe guard boundary                                                            |
+| matchValidator   | Function<string, boolean> |               | Function which validates if a particular match is valid. This can be used to skip some matches based on business logic.               |
 
 #### `isTimeMatches(expr: CronExprs | string, time: string, timezone?: string)`
 
@@ -279,13 +280,4 @@ false
 true
 ```
 
-Second argument is `MatchOptions` with any of following fields.
-
-| Field            | Type    | Default Value | Description                                                                                                                           |
-| ---------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| timezone         | string  | Etc/UTC       | Indicates the timezone of the cron expression                                                                                         |
-| startAt          | string  | Current Time  | The date/time in ISO8601 format to where to start the matching from (inclusive)                                                       |
-| endAt            | string  |               | The last date time (exclusive) to match                                                                                               |
-| matchCount       | number  | 5             | Number of matches to return                                                                                                           |
-| formatInTimezone | boolean | false         | If set to true, then returned time strings will be formatted in the given timezone. Otherwise, they will be formatted in UTC timezone |
-| maxLoopCount     | number  | 10,000        | Max number of time matches to compute. This is kind of safe guard boundary                                                            |
+Second argument is `MatchOptions` with any of following fields (see above for more details on MatchOptions)
