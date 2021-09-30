@@ -6,7 +6,7 @@
     "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "lib": ["ES2019", "es2020.promise"],
+    "lib": ["es5", "es2020.promise"],
     "module": "commonjs",
     "moduleResolution": "node",
     "pretty": false,
@@ -15,7 +15,7 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "stripInternal": true,
-    "target": "ES2019",
+    "target": "es5",
     "typeRoots": ["node_modules/@types"],
     "types": ["node", "jest"]
   },
