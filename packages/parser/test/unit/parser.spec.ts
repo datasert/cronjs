@@ -33,7 +33,7 @@ function expectExpr(expr: string, expected: any) {
   }
 
   const output = subject.parse(expr);
-  delete output.pattern;
+  delete (output as Partial<subject.CronExprs>).pattern;
   // console.log(`####### output [${expr}]`, JSON.stringify(output));
   expect(output).toEqual({expressions: [expected]});
 }
