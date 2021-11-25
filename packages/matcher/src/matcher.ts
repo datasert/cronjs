@@ -21,13 +21,13 @@
 // SOFTWARE.
 
 import {DateTime} from 'luxon';
-import {CronExpr, CronExprs, CronField, PlainObject, parse} from '@datasert/cronjs-parser';
+import {CronExpr, CronExprs, CronField, PlainObject, parse, ParseOptions} from '@datasert/cronjs-parser';
 
 export interface Func<I, O> {
   (input: I): O;
 }
 
-export interface MatchOptions {
+export interface MatchOptions extends ParseOptions {
   timezone?: string;
   startAt?: string;
   endAt?: string;
@@ -536,7 +536,7 @@ export function getFutureMatches(expr: CronExprs | string, options: MatchOptions
   const endTime = options.endAt ? DateTime.fromISO(options.endAt, dtoptions) : undefined;
   const count = options.matchCount || 5;
   const nextTimes: string[] = [];
-  const cronExprs = simplifyExprs(typeof expr === 'string' ? parse(expr) : deepClone(expr));
+  const cronExprs = simplifyExprs(typeof expr === 'string' ? parse(expr, options) : deepClone(expr));
   const timeSeries = getTimeSeries(cronExprs, startTime);
 
   const maxLoopCount = options.maxLoopCount || MAX_LOOP_COUNT;

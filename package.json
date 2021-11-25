@@ -12,7 +12,7 @@
     "url": "git+https://github.com/datasert/cronjs.git"
   },
   "scripts": {
-    "compile": "lerna run compile",
+    "tsc": "lerna run compile",
     "clean": "lerna run clean",
     "cleancompile": "lerna run cleancompile",
     "lint": "lerna run lint",
@@ -24,16 +24,16 @@
   "devDependencies": {
     "@types/jest": "^25.2.2",
     "@types/node": "^12.12.31",
-    "@typescript-eslint/eslint-plugin": "^2.26.0",
-    "@typescript-eslint/parser": "^2.26.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-prettier": "^3.1.3",
-    "jest": "^25.5.4",
-    "lerna": "^3.21.0",
-    "prettier": "^2.0.5",
-    "ts-jest": "^25.5.1",
-    "typescript": "^3.8.3"
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.3.1",
+    "lerna": "^4.0.0",
+    "prettier": "^2.5.0",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.5.2"
   },
   "prettier": {
     "trailingComma": "es5",
