@@ -217,7 +217,7 @@ yarn add @datasert/cronjs-matcher
 
 or
 
-npm add @datasert/cronjs-matcher --save-dev
+npm add @datasert/cronjs-matcher --save
 ```
 
 Import into your code
