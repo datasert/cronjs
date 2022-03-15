@@ -532,7 +532,13 @@ function getOutputTime(newTime: DateTime, options: MatchOptions) {
  */
 export function getFutureMatches(expr: CronExprs | string, options: MatchOptions = {}): string[] {
   const dtoptions = {zone: options.timezone || TZ_UTC};
-  const startTime = DateTime.fromISO(options.startAt ? options.startAt : new Date().toISOString(), dtoptions);
+
+  // If input contains millisecond, it used to use that find future matches which can lead to millisecond rounding
+  // errors. So by setting ms to 0, we can avoid it.
+  const startTime = DateTime.fromISO(options.startAt ? options.startAt : new Date().toISOString(), dtoptions).set({
+    millisecond: 0,
+  });
+
   const endTime = options.endAt ? DateTime.fromISO(options.endAt, dtoptions) : undefined;
   const count = options.matchCount || 5;
   const nextTimes: string[] = [];
