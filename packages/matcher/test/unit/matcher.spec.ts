@@ -568,3 +568,42 @@ describe('isTimeMatches', () => {
     checkTime(pattern, ['2020-02-28T00:00:00Z'], false);
   });
 });
+
+describe('#24 Unexpected milliseconds in getFutureMatches', () => {
+  it('it works', () => {
+    const output = subject.getFutureMatches(
+      '0 5 * * * *',
+      Object.assign({}, {startAt: '2022-02-18T05:00:00.958Z', matchCount: 1})
+    );
+    expect(output).toEqual(['2022-02-18T05:00:00Z']);
+  });
+});
+
+describe('#22 Unexpected results from matcher', () => {
+  it('it works1', () => {
+    const output = subject.getFutureMatches(
+      '0 2 * * 0',
+      Object.assign({}, {startAt: '2022-02-18T05:00:00.788Z', matchCount: 5})
+    );
+    expect(output).toEqual([
+      '2022-02-19T02:00:00Z',
+      '2022-02-20T02:00:00Z',
+      '2022-02-21T02:00:00Z',
+      '2022-02-22T02:00:00Z',
+      '2022-02-23T02:00:00Z',
+    ]);
+  });
+  it('it works2', () => {
+    const output = subject.getFutureMatches(
+      '0 2 * * 0',
+      Object.assign({}, {startAt: '2022-02-18T05:00:00.958Z', matchCount: 5})
+    );
+    expect(output).toEqual([
+      '2022-02-19T02:00:00Z',
+      '2022-02-20T02:00:00Z',
+      '2022-02-21T02:00:00Z',
+      '2022-02-22T02:00:00Z',
+      '2022-02-23T02:00:00Z',
+    ]);
+  });
+});
