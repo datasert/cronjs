@@ -393,11 +393,7 @@ function isFieldMatches(expr: CronExpr, field: FieldType, timeValue: number): bo
 
   if (value.omit) {
     // omit in second matches only if second is zero.
-    if (field === 'second') {
-      return timeValue === 0;
-    } else {
-      return false;
-    }
+    return field === 'second';
   }
 
   if (value.values && value.values.includes(timeValue)) {

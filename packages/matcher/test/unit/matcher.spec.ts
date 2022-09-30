@@ -553,7 +553,7 @@ function checkTime(expr: string, times: string[], result: boolean) {
 describe('isTimeMatches', () => {
   it('every minute', () => {
     checkTime('* * * * ?', ['2020-01-01T00:00:00Z'], true);
-    checkTime('* * * * ?', ['2020-01-01T00:00:01Z'], false);
+    checkTime('* * * * ?', ['2020-01-01T00:00:01Z'], true); // since secs is omitted, it will match any seconds
   });
 
   it('first monday of month', () => {
@@ -566,5 +566,10 @@ describe('isTimeMatches', () => {
     const pattern = '0 0 l * ?';
     checkTime(pattern, ['2020-01-31T00:00:00Z', '2020-02-29T00:00:00Z'], true);
     checkTime(pattern, ['2020-02-28T00:00:00Z'], false);
+  });
+
+  it('#31 - If secs are omitted, then it should not check for seconds value', () => {
+    const pattern = '* * 15 * ?';
+    checkTime(pattern, ['2022-09-15T13:30:50.753Z'], true);
   });
 });
