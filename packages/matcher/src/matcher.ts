@@ -21,7 +21,15 @@
 // SOFTWARE.
 
 import {DateTime} from 'luxon';
-import {CronExpr, CronExprs, CronField, PlainObject, parse, ParseOptions} from '@datasert/cronjs-parser';
+import {
+  FIELD_INFO,
+  FieldType,
+  CronField,
+  CronExpr,
+  CronExprs,
+  parse,
+  ParseOptions,
+} from '@datasert/cronjs-parser/dist/parser';
 
 export interface Func<I, O> {
   (input: I): O;
@@ -37,58 +45,19 @@ export interface MatchOptions extends ParseOptions {
   matchValidator?: Func<string, boolean>;
 }
 
-interface FieldInfo {
-  min: number;
-  max: number;
-}
-
 const MAX_LOOP_COUNT = 100_000;
-const FLD_SECOND = 'second';
-const FLD_MINUTE = 'minute';
-const FLD_HOUR = 'hour';
-const FLD_DAY_OF_MONTH = 'day_of_month';
-const FLD_MONTH = 'month';
-const FLD_DAY_OF_WEEK = 'day_of_week';
-const FLD_YEAR = 'year';
 const DAY_SUN = 0;
 const DAY_MON = 1;
 const DAY_FRI = 5;
 const DAY_SAT = 6;
 
-const FIELD_INFO: PlainObject<FieldInfo> = {
-  [FLD_SECOND]: {
-    min: 0,
-    max: 59,
-  },
-  [FLD_MINUTE]: {
-    min: 0,
-    max: 59,
-  },
-  [FLD_HOUR]: {
-    min: 0,
-    max: 23,
-  },
-  [FLD_DAY_OF_MONTH]: {
-    min: 1,
-    max: 31,
-  },
-  [FLD_MONTH]: {
-    min: 1,
-    max: 12,
-  },
-  [FLD_DAY_OF_WEEK]: {
-    min: 0,
-    max: 6,
-  },
-  [FLD_YEAR]: {
-    min: 1970,
-    max: 2099,
-  },
-};
-
 const TZ_UTC = 'Etc/UTC';
-const FIELDS = [FLD_SECOND, FLD_MINUTE, FLD_HOUR, FLD_DAY_OF_MONTH, FLD_MONTH, FLD_YEAR, FLD_DAY_OF_WEEK].reverse();
-const FIELDS_SANS_DAY_REVERSE = [FLD_SECOND, FLD_MINUTE, FLD_HOUR, FLD_MONTH, FLD_YEAR].reverse();
+
+const FIELDS: FieldType[] = ['second', 'minute', 'hour', 'day_of_month', 'month', 'year', 'day_of_week'];
+const FIELDS_REVERSE = FIELDS.reverse() as FieldType[];
+
+const FIELDS_SANS_DAY: FieldType[] = ['second', 'minute', 'hour', 'month', 'year'];
+const FIELDS_SANS_DAY_REVERSE: FieldType[] = FIELDS_SANS_DAY.reverse();
 
 // from https://stackoverflow.com/questions/4459928/how-to-deep-clone-in-javascript/
 function deepClone(obj: any) {
@@ -144,7 +113,7 @@ function isBlank(values?: any[]) {
   return !values || values.length === 0;
 }
 
-function expandFields(exprs: CronExprs, field: string, startYear: number): number[] {
+function expandFields(exprs: CronExprs, field: FieldType, startYear: number): number[] {
   const values: number[] = [];
   exprs.expressions.forEach((expr: CronExpr) => {
     values.push(...expandField(expr, field, startYear));
@@ -153,14 +122,14 @@ function expandFields(exprs: CronExprs, field: string, startYear: number): numbe
   return values.length === 0 ? values : sort(dedupe(values));
 }
 
-function expandField(expr: CronExpr, field: string, startYear: number): number[] {
+function expandField(expr: CronExpr, field: FieldType, startYear: number): number[] {
   const exprField = expr[field];
   if (exprField.omit) {
-    return field === FLD_SECOND ? [0] : [];
+    return field === 'second' ? [0] : [];
   }
 
-  if (field === FLD_DAY_OF_WEEK) {
-    const info = FIELD_INFO[FLD_DAY_OF_MONTH];
+  if (field === 'day_of_week') {
+    const info = FIELD_INFO.day_of_month;
     return getValues(info.min, info.max, 1);
   }
 
@@ -176,7 +145,7 @@ function expandField(expr: CronExpr, field: string, startYear: number): number[]
   const values = [...(exprField.values || [])];
 
   if (all) {
-    const from = field == FLD_YEAR ? startYear : info.min;
+    const from = field == 'year' ? startYear : info.min;
     values.push(...getValues(from, info.max, 1));
     return values;
   }
@@ -203,9 +172,9 @@ function expandField(expr: CronExpr, field: string, startYear: number): number[]
 }
 
 function mergeExprs(exprs: CronExprs, startYear: number): CronExpr {
-  const mergedExpr: PlainObject<CronField> = {};
-  for (const field of FIELDS) {
-    if (field === FLD_DAY_OF_WEEK || field === FLD_DAY_OF_MONTH) {
+  const mergedExpr: Partial<Record<FieldType, CronField>> = {};
+  for (const field of FIELDS_REVERSE) {
+    if (field === 'day_of_week' || field === 'day_of_month') {
       continue;
     }
 
@@ -214,16 +183,16 @@ function mergeExprs(exprs: CronExprs, startYear: number): CronExpr {
     };
   }
 
-  mergedExpr[FLD_DAY_OF_MONTH] = {
+  mergedExpr.day_of_month = {
     values: sort(
-      dedupe([...expandFields(exprs, FLD_DAY_OF_MONTH, startYear), ...expandFields(exprs, FLD_DAY_OF_WEEK, startYear)])
+      dedupe([...expandFields(exprs, 'day_of_month', startYear), ...expandFields(exprs, 'day_of_week', startYear)])
     ),
   };
 
-  return mergedExpr;
+  return mergedExpr as CronExpr;
 }
 
-function simplifyField(expr: CronExpr, field: string) {
+function simplifyField(expr: CronExpr, field: FieldType) {
   const exprField = expr[field];
   if (exprField.steps) {
     exprField.values = exprField.values || [];
@@ -238,7 +207,7 @@ function simplifyField(expr: CronExpr, field: string) {
 
 function simplifyExprs(exprs: CronExprs): CronExprs {
   for (const expr of exprs.expressions) {
-    for (const field of FIELDS) {
+    for (const field of FIELDS_REVERSE) {
       simplifyField(expr, field);
     }
   }
@@ -257,21 +226,21 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
   let newTime = startTime;
   let startTimeReached = false;
 
-  for (let year of mergedExpr[FLD_YEAR].values!!) {
+  for (let year of mergedExpr.year.values!!) {
     if (year < startTime.year) {
       continue;
     }
 
     newTime = setTime(newTime, {year});
 
-    for (let month of mergedExpr[FLD_MONTH].values!!) {
+    for (let month of mergedExpr.month.values!!) {
       if (year === startTime.year && month < startTime.month) {
         continue;
       }
 
       newTime = setTime(newTime, {month});
 
-      for (let day of mergedExpr[FLD_DAY_OF_MONTH].values!!) {
+      for (let day of mergedExpr.day_of_month.values!!) {
         if (year === startTime.year && month === startTime.month && day < startTime.day) {
           continue;
         }
@@ -282,17 +251,17 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
 
         newTime = setTime(newTime, {day});
 
-        for (let hour of mergedExpr[FLD_HOUR].values!!) {
+        for (let hour of mergedExpr.hour.values!!) {
           if (year === startTime.year && month === startTime.month && day === startTime.day && hour < startTime.hour) {
             continue;
           }
 
           newTime = setTime(newTime, {hour});
 
-          for (let minute of mergedExpr[FLD_MINUTE].values!!) {
+          for (let minute of mergedExpr.minute.values!!) {
             newTime = setTime(newTime, {minute});
 
-            for (let second of mergedExpr[FLD_SECOND].values!!) {
+            for (let second of mergedExpr.second.values!!) {
               newTime = setTime(newTime, {second});
 
               if (!startTimeReached) {
@@ -415,7 +384,7 @@ function isInRange(from: number, to: number, value: number) {
   return value >= from && value <= to;
 }
 
-function isFieldMatches(expr: CronExpr, field: string, timeValue: number): boolean {
+function isFieldMatches(expr: CronExpr, field: FieldType, timeValue: number): boolean {
   const value = expr[field];
 
   if (!value || value.all) {
@@ -424,7 +393,7 @@ function isFieldMatches(expr: CronExpr, field: string, timeValue: number): boole
 
   if (value.omit) {
     // omit in second matches only if second is zero.
-    if (field === FLD_SECOND) {
+    if (field === 'second') {
       return timeValue === 0;
     } else {
       return false;
@@ -442,7 +411,7 @@ function isFieldMatches(expr: CronExpr, field: string, timeValue: number): boole
   return false;
 }
 
-function isDayOfMonthMatches(expr: CronExpr, field: string, time: DateTime) {
+function isDayOfMonthMatches(expr: CronExpr, field: FieldType, time: DateTime) {
   const info = expr[field];
 
   if (info.omit) {
@@ -470,7 +439,7 @@ function isDayOfMonthMatches(expr: CronExpr, field: string, time: DateTime) {
   return isFieldMatches(expr, field, time.day);
 }
 
-function isDayOfWeekMatches(expr: CronExpr, field: string, time: DateTime) {
+function isDayOfWeekMatches(expr: CronExpr, field: FieldType, time: DateTime) {
   const info = expr[field];
   if (info.omit) {
     return false;
@@ -503,14 +472,13 @@ function isDayOfWeekMatches(expr: CronExpr, field: string, time: DateTime) {
 
 function isExprMatches(expr: CronExpr, startTime: DateTime) {
   for (const field of FIELDS_SANS_DAY_REVERSE) {
-    // @ts-ignore
-    if (!isFieldMatches(expr, field, startTime[field])) {
+    if (!isFieldMatches(expr, field, (startTime as any)[field])) {
       return false;
     }
   }
 
-  // Now all all easy part of the date matches, now is the time to evaluate complicated day field
-  return isDayOfMonthMatches(expr, FLD_DAY_OF_MONTH, startTime) || isDayOfWeekMatches(expr, FLD_DAY_OF_WEEK, startTime);
+  // Now all easy part of the date matches, now is the time to evaluate complicated day field
+  return isDayOfMonthMatches(expr, 'day_of_month', startTime) || isDayOfWeekMatches(expr, 'day_of_week', startTime);
 }
 
 function isExprsMatches(exprs: CronExprs, time: DateTime): boolean {
