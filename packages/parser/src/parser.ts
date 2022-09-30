@@ -57,7 +57,7 @@ export interface CronField {
   nearestWeekdays?: number[];
 }
 
-export interface CronExpr extends PlainObject<CronField> {}
+export type CronExpr = Record<FieldType, CronField>;
 
 export interface CronExprs {
   pattern: string;
@@ -81,39 +81,19 @@ const PREDEFINED_EXPRS: PlainObject<string> = {
   '@hourly': '0 * * * ?',
 };
 
-const SECOND = 'second';
-const MINUTE = 'minute';
-const HOUR = 'hour';
-const DAY_OF_MONTH = 'day_of_month';
-const MONTH = 'month';
-const DAY_OF_WEEK = 'day_of_week';
-const YEAR = 'year';
-const FIELDS = [SECOND, MINUTE, HOUR, DAY_OF_MONTH, MONTH, DAY_OF_WEEK, YEAR];
-
-interface FieldInfo {
+export interface FieldInfo {
   min: number;
   max: number;
   alias?: PlainObject<number>;
 }
 
-const FIELD_INFO: PlainObject<FieldInfo> = {
-  [SECOND]: {
-    min: 0,
-    max: 59,
-  },
-  [MINUTE]: {
-    min: 0,
-    max: 59,
-  },
-  [HOUR]: {
-    min: 0,
-    max: 23,
-  },
-  [DAY_OF_MONTH]: {
-    min: 1,
-    max: 31,
-  },
-  [MONTH]: {
+export type FieldType = 'second' | 'minute' | 'hour' | 'month' | 'day_of_month' | 'day_of_week' | 'year';
+export const FIELD_INFO: Record<FieldType, FieldInfo> = {
+  second: {min: 0, max: 59},
+  minute: {min: 0, max: 59},
+  hour: {min: 0, max: 23},
+  day_of_month: {min: 1, max: 31},
+  month: {
     min: 1,
     max: 12,
     alias: {
@@ -131,7 +111,7 @@ const FIELD_INFO: PlainObject<FieldInfo> = {
       dec: 12,
     },
   },
-  [DAY_OF_WEEK]: {
+  day_of_week: {
     min: 0,
     max: 7,
     alias: {
@@ -145,11 +125,9 @@ const FIELD_INFO: PlainObject<FieldInfo> = {
       sat: 6,
     },
   },
-  [YEAR]: {
-    min: 1970,
-    max: 3000,
-  },
+  year: {min: 1970, max: 2099},
 };
+const FIELDS: FieldType[] = ['second', 'minute', 'hour', 'day_of_month', 'month', 'day_of_week', 'year'];
 
 function isTrue(val: any) {
   return val && val.toString() === 'true';
@@ -183,7 +161,7 @@ function invalidExpr(expr: string, msg: string) {
   return new Error(`Invalid cron expression [${expr}]. ${msg}`);
 }
 
-function parseField(expr: string, field: string, value: string): CronField {
+function parseField(expr: string, field: FieldType, value: string): CronField {
   value = value.toLowerCase().trim();
 
   if (value === VAL_STAR) {
@@ -215,10 +193,10 @@ function parseField(expr: string, field: string, value: string): CronField {
       parsed.lastDay = parseL(expr, field, part);
     } else if (part === VAL_LW) {
       parsed.lastWeekday = parseLW(expr, field, part);
-    } else if (field === DAY_OF_MONTH && part.indexOf(VAL_W) >= 0) {
+    } else if (field === 'day_of_month' && part.indexOf(VAL_W) >= 0) {
       parsed.nearestWeekdays = parsed.nearestWeekdays || [];
       parsed.nearestWeekdays.push(parseNearestWeekday(expr, field, part));
-    } else if (field === DAY_OF_WEEK && part.endsWith(VAL_L)) {
+    } else if (field === 'day_of_week' && part.endsWith(VAL_L)) {
       parsed.lastDays = parsed.lastDays || [];
       parsed.lastDays.push(parseLastDays(expr, field, part));
     } else {
@@ -234,40 +212,40 @@ function parseField(expr: string, field: string, value: string): CronField {
   return parsed;
 }
 
-function parseL(expr: string, field: string, value: string): boolean {
-  if (field === DAY_OF_WEEK || field === DAY_OF_MONTH) {
+function parseL(expr: string, field: FieldType, value: string): boolean {
+  if (field === 'day_of_week' || field === 'day_of_month') {
     return true;
   }
 
   throw invalidExpr(
     expr,
-    `Invalid value for [${value}] for field [${field}]. It can be used only for [${DAY_OF_MONTH} or ${DAY_OF_WEEK}] fields.`
+    `Invalid value for [${value}] for field [${field}]. It can be used only for [day_of_month or day_of_week] fields.`
   );
 }
 
-function parseQ(expr: string, field: string, value: string): CronField {
-  if (field === DAY_OF_WEEK || field === DAY_OF_MONTH) {
+function parseQ(expr: string, field: FieldType, value: string): CronField {
+  if (field === 'day_of_week' || field === 'day_of_month') {
     return {omit: true};
   }
 
   throw invalidExpr(
     expr,
-    `Invalid Value [${value}] for field [${field}]. It can be specified only for [${DAY_OF_MONTH} or ${DAY_OF_WEEK}] fields.`
+    `Invalid Value [${value}] for field [${field}]. It can be specified only for [day_of_month or day_of_week] fields.`
   );
 }
 
-function parseLW(expr: string, field: string, value: string): boolean {
-  if (field === DAY_OF_MONTH) {
+function parseLW(expr: string, field: FieldType, value: string): boolean {
+  if (field === 'day_of_month') {
     return true;
   }
 
   throw invalidExpr(
     expr,
-    `Invalid value for [${value}] for field [${field}]. It can be used only for [${DAY_OF_MONTH}] fields.`
+    `Invalid value for [${value}] for field [${field}]. It can be used only for [day_of_month] fields.`
   );
 }
 
-function parseValue(expr: string, field: string, value: string): number {
+function parseValue(expr: string, field: FieldType, value: string): number {
   const num = parseNumber(expr, field, value);
   const info = FIELD_INFO[field];
   if (num < info.min) {
@@ -287,7 +265,7 @@ function parseValue(expr: string, field: string, value: string): number {
   return num;
 }
 
-function parseStepRange(expr: string, field: string, value: string): CronStep {
+function parseStepRange(expr: string, field: FieldType, value: string): CronStep {
   const parts = value.split(VAL_SLASH);
   if (parts.length != 2) {
     throw invalidExpr(
@@ -326,11 +304,11 @@ function parseStepRange(expr: string, field: string, value: string): CronStep {
   return {from, to, step};
 }
 
-function parseNth(expr: string, field: string, value: string): CronNth {
-  if (field !== DAY_OF_WEEK) {
+function parseNth(expr: string, field: FieldType, value: string): CronNth {
+  if (field !== 'day_of_week') {
     throw invalidExpr(
       expr,
-      `Invalid value [${value}] for field [${field}]. Nth day can be used only in [${DAY_OF_WEEK}] field.`
+      `Invalid value [${value}] for field [${field}]. Nth day can be used only in [day_of_week] field.`
     );
   }
 
@@ -338,7 +316,7 @@ function parseNth(expr: string, field: string, value: string): CronNth {
   if (parts.length !== 2) {
     throw invalidExpr(
       expr,
-      `Invalid nth day value [${value}] for field [${field}]. It must be in [${DAY_OF_WEEK}#instance] format.`
+      `Invalid nth day value [${value}] for field [${field}]. It must be in [day_of_week#instance] format.`
     );
   }
 
@@ -358,22 +336,22 @@ function parseNth(expr: string, field: string, value: string): CronNth {
   };
 }
 
-function parseNearestWeekday(expr: string, field: string, value: string): number {
-  if (field !== DAY_OF_MONTH) {
+function parseNearestWeekday(expr: string, field: FieldType, value: string): number {
+  if (field !== 'day_of_month') {
     throw invalidExpr(
       expr,
-      `Invalid value [${value}] for field [${field}]. Nearest weekday can be used only in [${DAY_OF_MONTH}] field.`
+      `Invalid value [${value}] for field [${field}]. Nearest weekday can be used only in [day_of_month] field.`
     );
   }
 
   return parseNumber(expr, field, value.split(VAL_W)[0]);
 }
 
-function parseLastDays(expr: string, field: string, value: string): number {
+function parseLastDays(expr: string, field: FieldType, value: string): number {
   return parseNumber(expr, field, value.split(VAL_L)[0]);
 }
 
-function parseRange(expr: string, field: string, value: string) {
+function parseRange(expr: string, field: FieldType, value: string) {
   const parts = value.split(VAL_DASH);
 
   if (parts.length != 2) {
@@ -387,7 +365,7 @@ function parseRange(expr: string, field: string, value: string) {
   let to = parseNumber(expr, field, unalias(field, parts[1]));
 
   // For day of week, sun will act as 0 or 7 depending on if it is in from or to
-  if (field == DAY_OF_WEEK) {
+  if (field == 'day_of_week') {
     if (to === 0) {
       to = 7;
     }
@@ -409,7 +387,7 @@ function parseRange(expr: string, field: string, value: string) {
   return {from, to};
 }
 
-function parseNumber(expr: string, field: string | undefined, value: string) {
+function parseNumber(expr: string, field: FieldType | undefined, value: string) {
   const num = parseInt(unalias(field, value), 10);
   if (Number.isNaN(num)) {
     throw invalidExpr(expr, `Invalid numeric value [${value}] in field [${field}].`);
@@ -417,7 +395,7 @@ function parseNumber(expr: string, field: string | undefined, value: string) {
   return num;
 }
 
-function unalias(field: string | undefined, value: string) {
+function unalias(field: FieldType | undefined, value: string) {
   if (!field) {
     return value;
   }
@@ -474,12 +452,12 @@ function parseExpr(expr: string, options: ParseOptions) {
     fieldParts[FIELDS[i]] = parts[i];
   }
 
-  const parsed: CronExpr = {};
+  const parsed: CronExpr = {} as CronExpr;
   for (const field of FIELDS) {
-    if (field === SECOND && !hasSeconds) {
+    if (field === 'second' && !hasSeconds) {
       parsed[field] = {omit: true};
     } else {
-      parsed[field] = parseField(expr, field, fieldParts[field]);
+      (parsed as any)[field] = parseField(expr, field, fieldParts[field]);
     }
   }
 
