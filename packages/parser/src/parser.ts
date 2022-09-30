@@ -57,7 +57,15 @@ export interface CronField {
   nearestWeekdays?: number[];
 }
 
-export interface CronExpr extends PlainObject<CronField> {}
+export interface CronExpr {
+  second: CronField;
+  minute: CronField;
+  hour: CronField;
+  day_of_month: CronField;
+  month: CronField;
+  day_of_week: CronField;
+  year: CronField;
+}
 
 export interface CronExprs {
   pattern: string;
@@ -474,12 +482,12 @@ function parseExpr(expr: string, options: ParseOptions) {
     fieldParts[FIELDS[i]] = parts[i];
   }
 
-  const parsed: CronExpr = {};
+  const parsed: CronExpr = {} as CronExpr;
   for (const field of FIELDS) {
     if (field === SECOND && !hasSeconds) {
       parsed[field] = {omit: true};
     } else {
-      parsed[field] = parseField(expr, field, fieldParts[field]);
+      (parsed as any)[field] = parseField(expr, field, fieldParts[field]);
     }
   }
 

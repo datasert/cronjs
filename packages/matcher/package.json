@@ -28,15 +28,15 @@
     "compile:watch": "tsc --watch",
     "build": "yarn clean && yarn compile",
     "prepublish": "yarn build",
-    "test": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js",
-    "test:watch": "ts-node -O '{\"module\":\"commonjs\"}' ../../node_modules/jest/bin/jest.js --watch"
+    "test": "../../node_modules/jest/bin/jest.js",
+    "testw": "../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
     "@datasert/cronjs-parser": "^1.2.0",
-    "luxon": "^2.1.1"
+    "luxon": "^3.0.4"
   },
   "devDependencies": {
-    "@types/luxon": "^2.0.7"
+    "@types/luxon": "^3.0.1"
   },
   "jest": {
     "collectCoverage": true,
@@ -52,7 +52,9 @@
       "test"
     ],
     "transform": {
-      "^.+\\.tsx?$": "ts-jest"
+      "^.+\\.(t|j)sx?$": [
+        "@swc/jest"
+      ]
     },
     "testRegex": "(/test/unit/.*|(\\.|/)(test|spec))\\.tsx?$",
     "testTimeout": 120000
