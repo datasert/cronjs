@@ -12,13 +12,13 @@
     "url": "git+https://github.com/datasert/cronjs.git"
   },
   "scripts": {
-    "tsc": "lerna run compile",
+    "tsc": "lerna run tsc",
     "clean": "lerna run clean",
-    "cleancompile": "lerna run cleancompile",
+    "cleantsc": "lerna run cleantsc",
     "lint": "lerna run lint",
     "test": "lerna run test",
     "new-version": "lerna publish --skip-git --skip-npm --force-publish '*'",
-    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
+    "check-packages": "yarn clean && yarn tsc && yarn test && yarn lint",
     "release": "lerna publish from-package --yes"
   },
   "devDependencies": {

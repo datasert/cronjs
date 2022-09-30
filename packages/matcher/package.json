@@ -23,10 +23,10 @@
   "scripts": {
     "lint": "eslint --ext .js,.ts src",
     "clean": "rm -rf dist && rm -rf coverage && rm -rf yarn-error.log",
-    "compile": "tsc",
-    "cleancompile": "yarn clean && yarn compile",
-    "compile:watch": "tsc --watch",
-    "build": "yarn clean && yarn compile",
+    "tsc": "tsc",
+    "cleantsc": "yarn clean && yarn tsc",
+    "tscw": "tsc --watch",
+    "build": "yarn clean && yarn tsc",
     "prepublish": "yarn build",
     "test": "../../node_modules/jest/bin/jest.js",
     "testw": "../../node_modules/jest/bin/jest.js --watch"
@@ -58,5 +58,6 @@
     },
     "testRegex": "(/test/unit/.*|(\\.|/)(test|spec))\\.tsx?$",
     "testTimeout": 120000
-  }
+  },
+  "gitHead": "4dbb1ecb2a1f764b696d43eea47d5b04daee9d9d"
 }
