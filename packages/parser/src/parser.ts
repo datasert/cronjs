@@ -276,8 +276,8 @@ function parseStepRange(expr: string, field: FieldType, value: string): CronStep
 
   const info = FIELD_INFO[field];
   const fromParts = parts[0].indexOf(VAL_DASH) >= 0 ? parts[0].split(VAL_DASH) : [parts[0]];
-  const from = parseNumber(expr, field, unalias(field, fromParts[0] === VAL_STAR ? info.min.toString() : fromParts[0]));
-  const to = parseNumber(expr, field, unalias(field, fromParts.length > 1 ? fromParts[1] : info.max.toString()));
+  const from = fromParts[0] === VAL_STAR ? info.min : parseNumber(expr, field, unalias(field, fromParts[0]));
+  const to = fromParts.length > 1 ? parseNumber(expr, field, unalias(field, fromParts[1])) : info.max;
   const step = parseNumber(expr, field, unalias(field, parts[1]));
 
   if (from < info.min) {
