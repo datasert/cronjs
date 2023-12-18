@@ -32,6 +32,7 @@ import {
 } from '@datasert/cronjs-parser/dist/parser';
 
 export interface Func<I, O> {
+  // eslint-disable-next-line no-unused-vars
   (input: I): O;
 }
 
@@ -66,7 +67,7 @@ function deepClone(obj: any) {
   }
 
   let v;
-  let bObject: any = Array.isArray(obj) ? [] : {};
+  const bObject: any = Array.isArray(obj) ? [] : {};
   for (const k in obj) {
     v = obj[k];
     bObject[k] = typeof v === 'object' ? deepClone(v) : v;
@@ -250,21 +251,21 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
   let newTime = startTime;
   let startTimeReached = false;
 
-  for (let year of mergedExpr.year.values!!) {
+  for (const year of mergedExpr.year.values!!) {
     if (year < startTime.year) {
       continue;
     }
 
     newTime = setTime(newTime, {year});
 
-    for (let month of mergedExpr.month.values!!) {
+    for (const month of mergedExpr.month.values!!) {
       if (year === startTime.year && month < startTime.month) {
         continue;
       }
 
       newTime = setTime(newTime, {month});
 
-      for (let day of mergedExpr.day_of_month.values!!) {
+      for (const day of mergedExpr.day_of_month.values!!) {
         if (year === startTime.year && month === startTime.month && day < startTime.day) {
           continue;
         }
@@ -275,17 +276,17 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
 
         newTime = setTime(newTime, {day});
 
-        for (let hour of mergedExpr.hour.values!!) {
+        for (const hour of mergedExpr.hour.values!!) {
           if (year === startTime.year && month === startTime.month && day === startTime.day && hour < startTime.hour) {
             continue;
           }
 
           newTime = setTime(newTime, {hour});
 
-          for (let minute of mergedExpr.minute.values!!) {
+          for (const minute of mergedExpr.minute.values!!) {
             newTime = setTime(newTime, {minute});
 
-            for (let second of mergedExpr.second.values!!) {
+            for (const second of mergedExpr.second.values!!) {
               newTime = setTime(newTime, {second});
 
               if (!startTimeReached) {
@@ -323,7 +324,7 @@ function getLastDay(time: DateTime, day?: number) {
 }
 
 function getLastWeekDay(time: DateTime) {
-  let endOfMonth = time.endOf('month');
+  const endOfMonth = time.endOf('month');
   const lastDay = getWeekDay(endOfMonth);
   if (lastDay >= DAY_MON && lastDay <= DAY_FRI) {
     return endOfMonth.day;

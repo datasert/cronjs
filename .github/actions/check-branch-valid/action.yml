@@ -1,0 +1,31 @@
+name: 'check-branch-valid'
+description: 'Verify branch is valid'
+
+inputs:
+  GITHUB_TOKEN:
+    description: 'GitHub auth token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout git branches
+      shell: bash
+      run: git fetch --no-tags origin +refs/heads/*:refs/remotes/origin/*
+
+    - name: Verify branch is up-to-date with master branch
+      shell: bash
+      run: |
+        if [ $(git log origin/${{ github.head_ref }}..origin/master --oneline | wc -l) -ne 0 ]
+        then
+          echo "Branch is not up-to-date with the master branch!"
+          exit 1
+        fi
+
+    - name: Comment on failure
+      if: ${{ failure() }}
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        token: ${{ inputs.GITHUB_TOKEN }}
+        body: Your branch is not up-to-date with `master`! Please rebase before proceeding.

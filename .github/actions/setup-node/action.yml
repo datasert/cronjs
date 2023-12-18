@@ -1,0 +1,45 @@
+name: 'setup-node'
+description: 'Setup Node'
+
+inputs:
+  APP_DIR:
+    description: 'Application dir'
+    default: '.'
+  NPM_TOKEN:
+    description: 'The npm Auth Token'
+    required: true
+  PACKAGE_MANAGER:
+    description: 'The package manager to use: "npm", "yarn", or "pnpm"'
+    default: 'pnpm'
+  PACKAGE_MANAGER_VERSION:
+    description: 'The package manager version'
+    default: '7'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version-file: '${{ inputs.APP_DIR }}/package.json'
+    - uses: pnpm/action-setup@v2
+      with:
+        version: ${{ inputs.PACKAGE_MANAGER_VERSION }}
+        run_install: false
+    - name: Setup NPM Token
+      shell: bash
+      run: |
+        echo "@datasert:registry=https://registry.npmjs.org" > ~/.npmrc
+        echo "//registry.npmjs.org/:_authToken=${{ inputs.NPM_TOKEN }}" >> ~/.npmrc
+        npm config set registry https://registry.npmjs.org
+        sudo mkdir ~/.npm || true
+        sudo chown -R $USER:$GROUP ~/.npm || true
+        sudo chown -R $USER:$GROUP ~/.config || true
+    - name: Install Package Manager
+      shell: bash
+      working-directory: ${{ inputs.APP_DIR }}
+      run: npm run ci:setup --if-present
+    - name: Install Dependencies
+      shell: bash
+      working-directory: ${{ inputs.APP_DIR }}
+      run: npm run ci:install --if-present
