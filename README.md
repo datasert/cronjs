@@ -30,7 +30,7 @@ Field positions and its corresponding properties are defined as follows.
 | ------------ | ---------- | ---------- | ---------- | ---------------- | ---------- | ---------------- | ----------- |
 | Required     |            | Yes        | Yes        | Yes              | Yes        | Yes              |             |
 | Values Range | `0-59`     | `0-59`     | `0-23`     | `1-31`           | `1-12`     | `0-7`            | `1970-3000` |
-| Flags        | `, - \* /` | `, - \* /` | `, - \* /` | `, - \* / ? L W` | `, - \* /` | `, - \* / ? L #` | `, - \* /`  |
+| Flags        | `, - * /` | `, - * /` | `, - * /` | `, - * / ? L W` | `, - * /` | `, - * / ? L #` | `, - * /`  |
 | Alias        |            |            |            |                  | jan-dec    | sun-sat          |             |
 
 Cron expressions indicate time units which all should match for a time to match that expression. Given time matches
