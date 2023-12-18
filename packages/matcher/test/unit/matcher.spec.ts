@@ -828,14 +828,23 @@ describe('#22 Unexpected results from matcher', () => {
         '2021-03-29T00:00:00Z',
       ]);
     });
+  });
 
-    describe('#46 isTimeMatches returns correct result', () => {
-      it('it works', () => {
-        checkTime('* * * * ?', ['2023-10-25T05:11:20.627Z'], true);
-        checkTime('* * * * *', ['2023-10-25T05:11:36.204Z'], true);
-        checkTime('* * ? * *', ['2023-10-25T05:11:52.135Z'], true);
-        checkTime('12 * * * *', ['2023-10-25T05:12:09.575Z'], true);
-      });
+  describe('#46 isTimeMatches returns correct result', () => {
+    it('it works', () => {
+      checkTime('* * * * ?', ['2023-10-25T05:11:20.627Z'], true);
+      checkTime('* * * * *', ['2023-10-25T05:11:36.204Z'], true);
+      checkTime('* * ? * *', ['2023-10-25T05:11:52.135Z'], true);
+      checkTime('12 * * * *', ['2023-10-25T05:12:09.575Z'], true);
+    });
+  });
+
+  describe('#44 last day of month flag in dow', () => {
+    it('it works', () => {
+      checkTime('* * ? * fri#4', ['2023-09-22T11:41:00.000Z'], true);
+      checkTime('* * ? * fri#5', ['2023-09-29T11:41:00.000Z'], true);
+      checkTime('* * ? * thu#3', ['2023-09-21T11:41:00.000Z'], true);
+      checkTime('* * ? * thu#4', ['2023-09-28T11:41:00.000Z'], true);
     });
   });
 });

@@ -479,7 +479,7 @@ function isDayOfWeekMatches(expr: CronExpr, field: FieldType, time: DateTime) {
     if (
       info.nthDays!!.find((nthDay) => {
         const days = getDaysOfType(time, nthDay.day_of_week);
-        return days.length > nthDay.instance && days[nthDay.instance - 1] === time.day;
+        return days.length >= nthDay.instance && days[nthDay.instance - 1] === time.day;
       }) !== undefined
     ) {
       return true;
