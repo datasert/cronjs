@@ -432,12 +432,12 @@ function parseExpr(expr: string, options: ParseOptions) {
     );
   }
 
-  // If seconds is not specified, then defaults to 0th sec
+  // If second is not specified, then defaults to 0th sec
   if (!hasSeconds) {
     parts.unshift('0');
   }
 
-  // If day of week is not specified, will default to ?
+  // If the day of week is not specified, will default to ?
   if (parts.length === 5) {
     parts.push(VAL_Q);
   }

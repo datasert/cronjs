@@ -353,6 +353,22 @@ describe('valid expressions', () => {
   });
 
   it('day of week: steps', () => {
+    expectExpr('30 12 * * */0', {
+      minute: {values: [30]},
+      hour: {values: [12]},
+      day_of_week: {
+        steps: [{from: 0, to: 7, step: 0}],
+      },
+    });
+
+    expectExpr('30 12 * * */1', {
+      minute: {values: [30]},
+      hour: {values: [12]},
+      day_of_week: {
+        steps: [{from: 0, to: 7, step: 1}],
+      },
+    });
+
     expectExpr('30 12 * * */4', {
       minute: {values: [30]},
       hour: {values: [12]},

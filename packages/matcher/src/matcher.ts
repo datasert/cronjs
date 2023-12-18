@@ -102,8 +102,13 @@ function getWeekDay(time: DateTime) {
 
 function getValues(from: number, to: number, step: number) {
   const values: number[] = [];
-  for (let i = from; i <= to; i += step) {
-    values.push(i);
+
+  if (step == 0) {
+    values.push(from);
+  } else {
+    for (let i = from; i <= to; i += step) {
+      values.push(i);
+    }
   }
 
   return values;
@@ -392,7 +397,7 @@ function isFieldMatches(expr: CronExpr, field: FieldType, timeValue: number): bo
   }
 
   if (value.omit) {
-    // if sec field is omitted, then ignore seconds
+    // if the second field is omitted, then ignore seconds
     return field === 'second';
   }
 
@@ -431,7 +436,7 @@ function isDayOfMonthMatches(expr: CronExpr, field: FieldType, time: DateTime) {
     return true;
   }
 
-  // finally we will do usual values check
+  // Finally, we will do the usual values check
   return isFieldMatches(expr, field, time.day);
 }
 
@@ -462,7 +467,7 @@ function isDayOfWeekMatches(expr: CronExpr, field: FieldType, time: DateTime) {
     }
   }
 
-  // finally we will do usual values check
+  // Finally, we will do the usual values check
   return isFieldMatches(expr, field, getWeekDay(time));
 }
 
@@ -473,7 +478,7 @@ function isExprMatches(expr: CronExpr, startTime: DateTime) {
     }
   }
 
-  // Now all easy part of the date matches, now is the time to evaluate complicated day field
+  // Now all easy parts of the date matches, now is the time to evaluate complicated day field
   return isDayOfMonthMatches(expr, 'day_of_month', startTime) || isDayOfWeekMatches(expr, 'day_of_week', startTime);
 }
 
