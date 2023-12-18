@@ -26,12 +26,12 @@ Cron expressions consist of various fields representing time units in fixed posi
 
 Field positions and its corresponding properties are defined as follows.
 
-|              | second     | minute     | hour       | day of month     | month      | day of week      | year        |
-| ------------ | ---------- | ---------- | ---------- | ---------------- | ---------- | ---------------- | ----------- |
-| Required     |            | Yes        | Yes        | Yes              | Yes        | Yes              |             |
-| Values Range | `0-59`     | `0-59`     | `0-23`     | `1-31`           | `1-12`     | `0-7`            | `1970-3000` |
-| Flags        | `, - * /` | `, - * /` | `, - * /` | `, - * / ? L W` | `, - * /` | `, - * / ? L #` | `, - * /`  |
-| Alias        |            |            |            |                  | jan-dec    | sun-sat          |             |
+|              | second    | minute    | hour      | day of month    | month     | day of week     | year        |
+| ------------ | --------- | --------- | --------- | --------------- | --------- | --------------- | ----------- |
+| Required     |           | Yes       | Yes       | Yes             | Yes       | Yes             |             |
+| Values Range | `0-59`    | `0-59`    | `0-23`    | `1-31`          | `1-12`    | `0-7`           | `1970-3000` |
+| Flags        | `, - * /` | `, - * /` | `, - * /` | `, - * / ? L W` | `, - * /` | `, - * / ? L #` | `, - * /`   |
+| Alias        |           |           |           |                 | jan-dec   | sun-sat         |             |
 
 Cron expressions indicate time units which all should match for a time to match that expression. Given time matches
 cron expression if and only if
@@ -49,7 +49,7 @@ All fields allow the following value types.
 - integer
 
   You can specify an integer indicating the time unit with in the allowed range. The allowed range for each field varies
-  and is documented below.
+  and is documented in the above table.
 
 - range as `{lower}-{higher}`
 
@@ -128,6 +128,22 @@ has special flags to deal with it and is as follows.
     2#2 => second tuesday
     3#2 => second wednesday
     ```
+
+If you specify both `day of month` and `day of week` fields, then how it is interpreted according to
+[POSIX](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/crontab.html) rules. Also see this
+[Stackoverflow thread](https://unix.stackexchange.com/questions/602328/are-the-day-of-month-and-day-of-week-crontab-fields-mutually-exclusive)
+for more info.
+
+- If `day of month` and `day of week` are `*`, then every day will be matched
+
+- If `day of month` is an element or list, but the `day of week` is `*`, then `day of month` is used
+  and `day of week` is omitted
+
+- If `day of month` is `*`, but `day of week` is an element or list, then `day of month` is omitted
+  and `day of week` is used
+
+- Finally, if both `day of month` and `day of week` is an element or list, then both will be considered and
+  any day matching either `day of month`, or `the day of week`, shall be matched.
 
 **Aliases**
 
