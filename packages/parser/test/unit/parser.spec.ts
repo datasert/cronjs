@@ -352,6 +352,16 @@ describe('valid expressions', () => {
     });
   });
 
+  it('day of week: steps', () => {
+    expectExpr('30 12 * * */4', {
+      minute: {values: [30]},
+      hour: {values: [12]},
+      day_of_week: {
+        steps: [{from: 0, to: 7, step: 4}],
+      },
+    });
+  });
+
   it('day of week and day of month: 15th or Sun', () => {
     expectExpr('* * 15 * sun', {
       day_of_month: {values: [15]},
