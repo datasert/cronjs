@@ -828,5 +828,14 @@ describe('#22 Unexpected results from matcher', () => {
         '2021-03-29T00:00:00Z',
       ]);
     });
+
+    describe('#46 isTimeMatches returns correct result', () => {
+      it('it works', () => {
+        checkTime('* * * * ?', ['2023-10-25T05:11:20.627Z'], true);
+        checkTime('* * * * *', ['2023-10-25T05:11:36.204Z'], true);
+        checkTime('* * ? * *', ['2023-10-25T05:11:52.135Z'], true);
+        checkTime('12 * * * *', ['2023-10-25T05:12:09.575Z'], true);
+      });
+    });
   });
 });
