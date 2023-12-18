@@ -7,7 +7,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/datasert/cronjs.git"
+    "url": "git+https://github.com/datasert/cronjs.git",
+    "directory": "packages/matcher"
   },
   "bugs": {
     "url": "https://github.com/datasert/cronjs/issues"
