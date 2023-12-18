@@ -1,56 +1,46 @@
 ## Overview
 
-`cronjs` is set of Javascript modules which helps with parsing, validating and evaluating cron expressions with support for special flags (L, W, # and ?). This can be used in both Node and Browser and is written in Typescript.
+`cronjs` is set of Javascript modules which help with parsing, validating and evaluating cron expressions with support
+for special flags (L, W, # and ?). This can be used in both Node and Browser and is written in Typescript.
 
-Note that at this time library does not have describer and scheduler but we would like to add those features in.
+Note that at this time the library does not have describer and scheduler, but we would like to add those features in.
 
-This is a mono-repo with multiple published packages. To manage mono-repo, we use [Yarn Workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) along with [Lerna](https://lerna.js.org/).
+This is a mono-repo with multiple published packages. To manage mono-repo, we
+use [Yarn Workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) along with [Lerna](https://lerna.js.org/).
 
-It consists of following packages:
+It consists of the following packages:
 
 - Parser
 
-  This package helps parse the cron expression and produces compiled cron expression object. As part of parsing, it validates the expressions and throws errors with meaningful messages.
+  This package helps parse the cron expression and produce a compiled cron expression object. As part of parsing, it
+  validates the expressions and throws errors with meaningful messages.
 
 - Matcher
 
-  This package helps evaluate the parsed cron expression and find the matching times. It allows to match future matches, if a time matches the cron, past time matches (tbi)
+  This package helps evaluate the parsed cron expression and find the matching times. It allows matching future matches,
+  if a time matches the cron, past time matches (tbi)
 
 ## Cron Expressions
 
-Cron expressions consists of various fields representing time units in fixed positions separated by spaces.
+Cron expressions consist of various fields representing time units in fixed positions separated by spaces.
 
-Field positions are as follows.
+Field positions and its corresponding properties are defined as follows.
 
-```
-1 2 3 4 5 6 7
-┬ ┬ ┬ ┬ ┬ ┬ ┬
-│ │ │ │ │ │ └── year (optional)
-│ │ │ │ │ └──── day of week
-│ │ │ │ └────── month
-│ │ │ └──────── day of month
-│ │ └────────── hour
-│ └──────────── minute
-└────────────── second (optional)
-```
+|              | second     | minute     | hour       | day of month     | month      | day of week      | year        |
+| ------------ | ---------- | ---------- | ---------- | ---------------- | ---------- | ---------------- | ----------- |
+| Required     |            | Yes        | Yes        | Yes              | Yes        | Yes              |             |
+| Values Range | `0-59`     | `0-59`     | `0-23`     | `1-31`           | `1-12`     | `0-7`            | `1970-3000` |
+| Flags        | `, - \* /` | `, - \* /` | `, - \* /` | `, - \* / ? L W` | `, - \* /` | `, - \* / ? L #` | `, - \* /`  |
+| Alias        |            |            |            |                  | jan-dec    | sun-sat          |             |
 
-Cron expressions indicates time units which all should match for a time to match that expression. Given time matches cron expression if and only if
-`second + minute + day (day of week or day of month) + month + year` time units matches. Note that we have two fields for day (day of week and day of month). So at least one of them should match the time.
-Each field allows common conventions to specify more than one value using below described conventions. In that case, any value in the field matches the time, then that time unit condition is met.
+Cron expressions indicate time units which all should match for a time to match that expression. Given time matches
+cron expression if and only if
+`second + minute + day (day of week or day of month) + month + year` time unit matches. Note that we have two fields
+for day (day of week and day of month). So at least one of them should match the time.
+Each field allows common conventions to specify more than one value using various flags (as indicated in table above).
+In that case, any value in the field matches the time, then that time unit condition is met.
 
-Following table details more information about each field.
-
-| Field        | Required | Values Range | Wildcards      | Alias   |
-| ------------ | -------- | ------------ | -------------- | ------- |
-| second       |          | 0-59         | , - \* /       |         |
-| minute       | Yes      | 0-59         | , - \* /       |         |
-| hour         | Yes      | 0-59         | , - \* /       |         |
-| day of month | Yes      | 1-31         | , - \* / ? L W |         |
-| month        | Yes      | 1-12         | , - \* /       | jan-dec |
-| day of week  | Yes      | 0-7          | , - \* / ? L # | sun-sat |
-| year         |          | 1970-3000    | , - \* /       |         |
-
-All fields allow following value types.
+All fields allow the following value types.
 
 - `*`
 
@@ -58,7 +48,8 @@ All fields allow following value types.
 
 - integer
 
-  You can specify an integer indicating the time unit with in the allowed range. Allowed range for each field varies and is documented below.
+  You can specify an integer indicating the time unit with in the allowed range. The allowed range for each field varies
+  and is documented below.
 
 - range as `{lower}-{higher}`
 
@@ -73,7 +64,8 @@ All fields allow following value types.
 
 - steps as `{range | integer}/{integer}`
 
-  Step is used to indicate the steps of values from given value to end of allowed range of within given range. If value is `*` then it is treated as lowest value of field range.
+  Step is used to indicate the steps of values from given value to end of allowed range of within given range. If value
+  is `*` then it is treated as lowest value of field range.
 
   For example (for hour):
 
@@ -87,7 +79,8 @@ All fields allow following value types.
 
 - multiple values separated by comma as `{value1},{value2}...`
 
-  Comma is used to separated multiple integers, ranges and steps. They can also be mix and matched. This can be used in all fields but some fields have restrictions when special char is used.
+  Comma is used to separate multiple integers, ranges, and steps. They can also be mixed and matched. This can be used
+  in all fields, but some fields have restrictions when special char is used.
 
   For example (for hour):
 
@@ -100,13 +93,15 @@ All fields allow following value types.
 
 **Day field**
 
-Day field is very special among all other time unit fields. Because this is the only field which is not predictable.
-For example., Jan is always first of month. But Monday is not always first of month. Hence it has special chars to deal with it and is as follows.
+Day field is a very special among all other time unit fields. Because this is the only field that is not predictable.
+For example, Jan is always the first month of the year. But Monday is not always the first day of the month. Hence, it
+has special flags to deal with it and is as follows.
 
 - day of month
 
-  - `?` indicates omit this field. This can be used to match day solely based on the day of month. Note that you cannot specify ? for both fields and `?` cannot be combined with any other values.
-  - `L` indicates last day of month. It matches last day of month in given time.
+  - `?` indicates omit this field. This can be used to match day solely based on the day of month. Note that you
+    cannot specify ? for both fields and `?` cannot be combined with any other values.
+  - `L` indicates last day of month. It matches the last day of the month in given time.
   - `{day integer}W` indicates week day (business day) closest to given day within the given month.
 
     For example:
@@ -117,12 +112,14 @@ For example., Jan is always first of month. But Monday is not always first of mo
 
   - `LW` indicates last week day of month
 
-- day of week
+- day of the week
 
-  - `?` indicates omit this field. This can be used to match day solely based on the day of month. Note that you cannot specify ? for both fields and `?` cannot be combined with any other values.
+  - `?` indicates omit this field. This can be used to match day solely based on the day of month. Note that you
+    cannot specify ? for both fields and `?` cannot be combined with any other values.
   - `L` indicates last day of week. When it is used by itself, it always means `sat`.
   - `day_of_weekL` indicates last day of week of that type. For example `1L` last Monday of month.
-  - `weekday#day_of_month` nth day of month. Number before `#` indicates weekday (sun-sat) and number after `#` indicates day of month.
+  - `weekday#day_of_month` nth day of month. Number before `#` indicates weekday (sun-sat) and number after `#`
+    indicates day of month.
 
     For example:
 
@@ -134,11 +131,12 @@ For example., Jan is always first of month. But Monday is not always first of mo
 
 **Aliases**
 
-Day of week and month allows values to be specified using alias insetad of numbers. Aliases are case insensitive. Alias for Month is `jan-dec` and for day of week `sun-sat`
+Day of week and month allows values to be specified using alias instead of numbers. Aliases are case-insensitive. Alias
+for Month is `jan-dec` and for day of week `sun-sat`
 
 **Examples**
 
-Here are some examples of cron expressions (without second and year)
+Here are some examples of cron expressions (without a second and year)
 
 ```
 0 13 * * ?         => every day at 1 PM.
@@ -149,7 +147,8 @@ Here are some examples of cron expressions (without second and year)
 
 ## Parser
 
-Parser helps parse the cron expression and produces compiled cron expression object. As part of parsing, it validates the expressions and throws errors with meaningful messages.
+Parser helps parse the cron expression and produces a compiled cron expression object. As part of parsing, it validates
+the expressions and throws errors with meaningful messages.
 
 Some noteworthy things about this parser.
 
@@ -174,7 +173,7 @@ npm add @datasert/cronjs-parser --save-dev
 Import into your code
 
 ```javascript
-import {parse} from `@datasert/cronjs-parser`
+import {parse} from '@datasert/cronjs-parser';
 ```
 
 And call it with an expression.
@@ -189,18 +188,19 @@ You can pass optional second parameter with options object with following option
 | ---------- | ------- | ------------- | ------------------------------------------------------------------------ |
 | hasSeconds | boolean | false         | If your cron expression has seconds, indicate it the by specifying true. |
 
-For example parsing cron expression with seconds.
+For example, parsing cron expression with seconds.
 
 ```javascript
 const parsedExpr = parse('0 0 10 ? * MON-FRI', {hasSeconds: true});
 ```
 
-If there are any errors, then it will throw an javascript Error with message indicating what is wrong. If `parse` method returns successfully,
-then your cron expression is fine.
+If there are any errors, then it will throw a javascript Error with a message indicating what is wrong. If `parse`
+method returns successfully, then your cron expression is fine.
 
 ## Matcher
 
-Matcher finds the times matching the cron expressions. It can be used to match future matches, and if time matches a cron expression.
+Matcher finds the times matching the cron expressions. It can be used to match future matches, and if time matches a
+cron expression.
 
 Some noteworthy things about this matcher.
 
@@ -223,7 +223,7 @@ npm add @datasert/cronjs-matcher --save
 Import into your code
 
 ```javascript
-import * as cronjsMatcher from `@datasert/cronjs-matcher`
+import * as cronjsMatcher from '@datasert/cronjs-matcher';
 ```
 
 Below are various matcher methods.
@@ -232,8 +232,8 @@ Below are various matcher methods.
 
 #### `getFutureMatches(expr: CronExprs | string, options?: MatchOptions)`
 
-This method is used to find future matches starting from given datetime (inclusive). By default it returns upto 5 matches.
-If you want more or less, you can specify the count using options.
+This method is used to find future matches starting from given datetime (inclusive). By default, it returns up to 5
+matches. If you want more or less, you can specify the count using options.
 
 ```javascript
 const futureMatches = cronjsMatcher.getFutureMatches('0/2 * * *', {startAt: '2020-01-01T00:00:00Z'});
@@ -252,7 +252,7 @@ prints:
 ]
 ```
 
-Second argument is `MatchOptions` with any of following fields.
+Second argument is `MatchOptions` with any of the following fields.
 
 | Field            | Type                      | Default Value | Description                                                                                                                           |
 | ---------------- | ------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -266,7 +266,7 @@ Second argument is `MatchOptions` with any of following fields.
 
 #### `isTimeMatches(expr: CronExprs | string, time: string, timezone?: string)`
 
-This method allows you to compare if given time would be matched by given cron expressions.
+This method allows you to compare if given time is matched by given cron expressions.
 
 ```javascript
 console.log(cronjsMatcher.isTimeMatches('0 0 l * ?', '2020-02-28T00:00:00Z'));
@@ -280,4 +280,4 @@ false
 true
 ```
 
-Second argument is `MatchOptions` with any of following fields (see above for more details on MatchOptions)
+Second argument is `MatchOptions` with any of the following fields (see above for more details on MatchOptions)

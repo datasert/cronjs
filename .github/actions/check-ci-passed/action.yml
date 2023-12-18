@@ -1,0 +1,65 @@
+name: 'check-ci-passed'
+description: 'Check CI checks have passed'
+
+inputs:
+  CHECKS:
+    description: 'CI Checks to check for'
+    required: false
+    default: '/ Check Branch,/ Check Lint,/ Check Format,/ Check Compile,/ Check Test'
+  SKIP_CI:
+    description: 'Flag to indicate if checks should be skipped'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/github-script@v6
+      with:
+        script: |
+          const util = require("util");
+          const ciCheckNames = ${{ inputs.SKIP_CI }} ? [] : ("${{ inputs.CHECKS }}".split(",").map(it => it.trim()));
+          const utilOptions = {
+            breakLength: 120,
+            depth: Infinity,
+            colors: true,
+            sort: true,
+          };
+
+          const response = await github.paginate(github.rest.checks.listForRef, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: context.sha || context.payload?.pull_request?.head?.sha,
+          });
+
+          console.log('response', response);
+
+          if (core.isDebug()) {
+            core.debug(util.inspect(response, utilOptions));
+          }
+
+          const keysToCopy = ["name", "status", "conclusion"];
+          const checkRuns = response.map(run => {
+            const output = {};
+            for (const key of keysToCopy) {
+              output[key] = run[key];
+            }
+            return output;
+          });
+
+          if (core.isDebug()) {
+            core.debug(util.inspect(checkRuns, utilOptions));
+          }
+
+          const ciChecks = ciCheckNames.map((name) => {
+            const checkRun = checkRuns.find(run => run.name.endsWith(name) && run.conclusion === "success");
+            return {
+              name,
+              isPassed: Boolean(checkRun),
+            }
+          });
+          core.info(util.inspect(ciChecks, utilOptions));
+          const failedChecks = ciChecks.filter(check => !check.isPassed).map(it => it.name);
+
+          if (failedChecks.length) {
+            core.setFailed("CI Checks failed [" + failedChecks.join(", ") + "]");
+          }

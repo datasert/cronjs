@@ -32,6 +32,7 @@ import {
 } from '@datasert/cronjs-parser/dist/parser';
 
 export interface Func<I, O> {
+  // eslint-disable-next-line no-unused-vars
   (input: I): O;
 }
 
@@ -66,7 +67,7 @@ function deepClone(obj: any) {
   }
 
   let v;
-  let bObject: any = Array.isArray(obj) ? [] : {};
+  const bObject: any = Array.isArray(obj) ? [] : {};
   for (const k in obj) {
     v = obj[k];
     bObject[k] = typeof v === 'object' ? deepClone(v) : v;
@@ -102,8 +103,13 @@ function getWeekDay(time: DateTime) {
 
 function getValues(from: number, to: number, step: number) {
   const values: number[] = [];
-  for (let i = from; i <= to; i += step) {
-    values.push(i);
+
+  if (step == 0) {
+    values.push(from);
+  } else {
+    for (let i = from; i <= to; i += step) {
+      values.push(i);
+    }
   }
 
   return values;
@@ -207,6 +213,25 @@ function simplifyField(expr: CronExpr, field: FieldType) {
 
 function simplifyExprs(exprs: CronExprs): CronExprs {
   for (const expr of exprs.expressions) {
+    // Some intricate scenarios pertaining to day of month and day of week
+    // https://unix.stackexchange.com/questions/602328/are-the-day-of-month-and-day-of-week-crontab-fields-mutually-exclusive
+
+    // If either the month or day of month is specified as an element or list, but the day of week is an <asterisk>,
+    // the month and day of month fields shall specify the days that match.
+    if (!expr.day_of_month.omit && !expr.day_of_week.omit) {
+      if (!expr.day_of_month.all && expr.day_of_week.all) {
+        delete expr.day_of_week.all;
+        expr.day_of_week.omit = true;
+      }
+
+      // If both month and day of month are specified as an <asterisk>, but day of week is an element or list,
+      // then only the specified days of the week match.
+      if (expr.day_of_month.all && !expr.day_of_week.all && !expr.day_of_week.omit) {
+        delete expr.day_of_month.all;
+        expr.day_of_month.omit = true;
+      }
+    }
+
     for (const field of FIELDS_REVERSE) {
       simplifyField(expr, field);
     }
@@ -226,21 +251,21 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
   let newTime = startTime;
   let startTimeReached = false;
 
-  for (let year of mergedExpr.year.values!!) {
+  for (const year of mergedExpr.year.values!!) {
     if (year < startTime.year) {
       continue;
     }
 
     newTime = setTime(newTime, {year});
 
-    for (let month of mergedExpr.month.values!!) {
+    for (const month of mergedExpr.month.values!!) {
       if (year === startTime.year && month < startTime.month) {
         continue;
       }
 
       newTime = setTime(newTime, {month});
 
-      for (let day of mergedExpr.day_of_month.values!!) {
+      for (const day of mergedExpr.day_of_month.values!!) {
         if (year === startTime.year && month === startTime.month && day < startTime.day) {
           continue;
         }
@@ -251,17 +276,17 @@ function* getTimeSeries(exprs: CronExprs, startTime: DateTime) {
 
         newTime = setTime(newTime, {day});
 
-        for (let hour of mergedExpr.hour.values!!) {
+        for (const hour of mergedExpr.hour.values!!) {
           if (year === startTime.year && month === startTime.month && day === startTime.day && hour < startTime.hour) {
             continue;
           }
 
           newTime = setTime(newTime, {hour});
 
-          for (let minute of mergedExpr.minute.values!!) {
+          for (const minute of mergedExpr.minute.values!!) {
             newTime = setTime(newTime, {minute});
 
-            for (let second of mergedExpr.second.values!!) {
+            for (const second of mergedExpr.second.values!!) {
               newTime = setTime(newTime, {second});
 
               if (!startTimeReached) {
@@ -299,7 +324,7 @@ function getLastDay(time: DateTime, day?: number) {
 }
 
 function getLastWeekDay(time: DateTime) {
-  let endOfMonth = time.endOf('month');
+  const endOfMonth = time.endOf('month');
   const lastDay = getWeekDay(endOfMonth);
   if (lastDay >= DAY_MON && lastDay <= DAY_FRI) {
     return endOfMonth.day;
@@ -392,7 +417,7 @@ function isFieldMatches(expr: CronExpr, field: FieldType, timeValue: number): bo
   }
 
   if (value.omit) {
-    // if sec field is omitted, then ignore seconds
+    // if the second field is omitted, then ignore seconds
     return field === 'second';
   }
 
@@ -431,7 +456,7 @@ function isDayOfMonthMatches(expr: CronExpr, field: FieldType, time: DateTime) {
     return true;
   }
 
-  // finally we will do usual values check
+  // Finally, we will do the usual values check
   return isFieldMatches(expr, field, time.day);
 }
 
@@ -455,14 +480,14 @@ function isDayOfWeekMatches(expr: CronExpr, field: FieldType, time: DateTime) {
     if (
       info.nthDays!!.find((nthDay) => {
         const days = getDaysOfType(time, nthDay.day_of_week);
-        return days.length > nthDay.instance && days[nthDay.instance - 1] === time.day;
+        return days.length >= nthDay.instance && days[nthDay.instance - 1] === time.day;
       }) !== undefined
     ) {
       return true;
     }
   }
 
-  // finally we will do usual values check
+  // Finally, we will do the usual values check
   return isFieldMatches(expr, field, getWeekDay(time));
 }
 
@@ -473,7 +498,7 @@ function isExprMatches(expr: CronExpr, startTime: DateTime) {
     }
   }
 
-  // Now all easy part of the date matches, now is the time to evaluate complicated day field
+  // Now all easy parts of the date matches, now is the time to evaluate complicated day field
   return isDayOfMonthMatches(expr, 'day_of_month', startTime) || isDayOfWeekMatches(expr, 'day_of_week', startTime);
 }
 

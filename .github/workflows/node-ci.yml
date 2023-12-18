@@ -1,0 +1,96 @@
+name: Node CI
+
+on:
+  workflow_call:
+    inputs:
+      APP_NAME:
+        required: true
+        type: string
+      APP_DIR:
+        required: false
+        type: string
+        default: '.'
+      SKIP_REMOVE_LABELS:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  remove-labels:
+    name: 'Remove Labels'
+    runs-on: ubuntu-latest
+    if: inputs.SKIP_REMOVE_LABELS == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Remove Labels
+        uses: ./.github/actions/remove-labels
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check-branch:
+    name: 'Check Branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Check Branch Valid
+        uses: ./.github/actions/check-branch-valid
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check-lint:
+    name: 'Check Lint'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: ./.github/actions/setup-node
+        with:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          APP_DIR: ${{ inputs.APP_DIR}}
+      - name: Run Linter
+        working-directory: ${{ inputs.APP_DIR }}
+        run: npm run 'ci:lint' --if-present
+
+  check-format:
+    name: 'Check Format'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Run Prettier
+        uses: creyD/prettier_action@v4.3
+        with:
+          prettier_options: --check .
+
+  check-compile:
+    name: 'Check Compile'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: ./.github/actions/setup-node
+        with:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          APP_DIR: ${{ inputs.APP_DIR}}
+      - name: Run Compile
+        working-directory: ${{ inputs.APP_DIR }}
+        run: npm run 'ci:compile' --if-present
+
+  check-test:
+    name: 'Check Test'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: ./.github/actions/setup-node
+        with:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          APP_DIR: ${{ inputs.APP_DIR}}
+      - name: Run Test
+        working-directory: ${{ inputs.APP_DIR }}
+        run: npm run 'ci:test' --if-present

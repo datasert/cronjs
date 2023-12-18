@@ -1,0 +1,17 @@
+name: 'remove-labels'
+description: 'Remove labels'
+
+inputs:
+  GITHUB_TOKEN:
+    description: 'GitHub auth token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Remove Labels
+      uses: buildsville/add-remove-label@v2.0.0
+      with:
+        token: ${{ inputs.GITHUB_TOKEN}}
+        labels: deploy dev,deploy stg,deploy prd,publish npm,tf plan
+        type: remove

@@ -1,0 +1,14 @@
+name: App CI
+
+on:
+  pull_request:
+    paths-ignore:
+      - README.md
+
+jobs:
+  app-ci:
+    name: 'App CI'
+    uses: ./.github/workflows/node-ci.yml
+    secrets: inherit
+    with:
+      APP_NAME: cronjs
