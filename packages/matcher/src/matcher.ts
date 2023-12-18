@@ -212,6 +212,25 @@ function simplifyField(expr: CronExpr, field: FieldType) {
 
 function simplifyExprs(exprs: CronExprs): CronExprs {
   for (const expr of exprs.expressions) {
+    // Some intricate scenarios pertaining to day of month and day of week
+    // https://unix.stackexchange.com/questions/602328/are-the-day-of-month-and-day-of-week-crontab-fields-mutually-exclusive
+
+    // If either the month or day of month is specified as an element or list, but the day of week is an <asterisk>,
+    // the month and day of month fields shall specify the days that match.
+    if (!expr.day_of_month.omit && !expr.day_of_week.omit) {
+      if (!expr.day_of_month.all && expr.day_of_week.all) {
+        delete expr.day_of_week.all;
+        expr.day_of_week.omit = true;
+      }
+
+      // If both month and day of month are specified as an <asterisk>, but day of week is an element or list,
+      // then only the specified days of the week match.
+      if (expr.day_of_month.all && !expr.day_of_week.all && !expr.day_of_week.omit) {
+        delete expr.day_of_month.all;
+        expr.day_of_month.omit = true;
+      }
+    }
+
     for (const field of FIELDS_REVERSE) {
       simplifyField(expr, field);
     }

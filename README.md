@@ -93,9 +93,9 @@ All fields allow the following value types.
 
 **Day field**
 
-Day field is very special among all other time unit fields. Because this is the only field that is not predictable.
-For example, Jan is always the first of month. But Monday is not always the first of month. Hence, it has special chars
-to deal with it and is as follows.
+Day field is a very special among all other time unit fields. Because this is the only field that is not predictable.
+For example, Jan is always the first month of the year. But Monday is not always the first day of the month. Hence, it
+has special flags to deal with it and is as follows.
 
 - day of month
 

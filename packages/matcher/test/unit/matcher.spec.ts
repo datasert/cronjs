@@ -731,24 +731,102 @@ describe('#22 Unexpected results from matcher', () => {
       Object.assign({}, {startAt: '2022-02-18T05:00:00.788Z', matchCount: 5})
     );
     expect(output).toEqual([
-      '2022-02-19T02:00:00Z',
       '2022-02-20T02:00:00Z',
-      '2022-02-21T02:00:00Z',
-      '2022-02-22T02:00:00Z',
-      '2022-02-23T02:00:00Z',
+      '2022-02-27T02:00:00Z',
+      '2022-03-06T02:00:00Z',
+      '2022-03-13T02:00:00Z',
+      '2022-03-20T02:00:00Z',
     ]);
   });
+
   it('it works2', () => {
     const output = subject.getFutureMatches(
       '0 2 * * 0',
       Object.assign({}, {startAt: '2022-02-18T05:00:00.958Z', matchCount: 5})
     );
     expect(output).toEqual([
-      '2022-02-19T02:00:00Z',
       '2022-02-20T02:00:00Z',
-      '2022-02-21T02:00:00Z',
-      '2022-02-22T02:00:00Z',
-      '2022-02-23T02:00:00Z',
+      '2022-02-27T02:00:00Z',
+      '2022-03-06T02:00:00Z',
+      '2022-03-13T02:00:00Z',
+      '2022-03-20T02:00:00Z',
     ]);
+  });
+
+  describe('#48 day of month and day of week complications', () => {
+    // If month, day of month, and day of week are all * characters, every day shall be matched.
+    it('all *', () => {
+      expectFutureMatches('0 0 * * *', [
+        '2020-01-01T00:00:00Z',
+        '2020-01-02T00:00:00Z',
+        '2020-01-03T00:00:00Z',
+        '2020-01-04T00:00:00Z',
+        '2020-01-05T00:00:00Z',
+        '2020-01-06T00:00:00Z',
+        '2020-01-07T00:00:00Z',
+        '2020-01-08T00:00:00Z',
+        '2020-01-09T00:00:00Z',
+        '2020-01-10T00:00:00Z',
+      ]);
+    });
+
+    // If either the month or day of month is specified as an element or list, but the day of week is an <asterisk>,
+    // the month and day of month fields shall specify the days that match.
+    it('day of month non* and day of week *', () => {
+      expectFutureMatches('0 0 1 * *', [
+        '2020-01-01T00:00:00Z',
+        '2020-02-01T00:00:00Z',
+        '2020-03-01T00:00:00Z',
+        '2020-04-01T00:00:00Z',
+        '2020-05-01T00:00:00Z',
+        '2020-06-01T00:00:00Z',
+        '2020-07-01T00:00:00Z',
+        '2020-08-01T00:00:00Z',
+        '2020-09-01T00:00:00Z',
+        '2020-10-01T00:00:00Z',
+      ]);
+
+      expectFutureMatches('0 0 1 2 *', [
+        '2020-02-01T00:00:00Z',
+        '2021-02-01T00:00:00Z',
+        '2022-02-01T00:00:00Z',
+        '2023-02-01T00:00:00Z',
+        '2024-02-01T00:00:00Z',
+        '2025-02-01T00:00:00Z',
+        '2026-02-01T00:00:00Z',
+        '2027-02-01T00:00:00Z',
+        '2028-02-01T00:00:00Z',
+        '2029-02-01T00:00:00Z',
+      ]);
+    });
+
+    // If both month and day of month are specified as an <asterisk>, but day of week is an element or list,
+    // then only the specified days of the week match.
+    it('day of month non* and day of week *', () => {
+      expectFutureMatches('0 0 * * 1', [
+        '2020-01-06T00:00:00Z',
+        '2020-01-13T00:00:00Z',
+        '2020-01-20T00:00:00Z',
+        '2020-01-27T00:00:00Z',
+        '2020-02-03T00:00:00Z',
+        '2020-02-10T00:00:00Z',
+        '2020-02-17T00:00:00Z',
+        '2020-02-24T00:00:00Z',
+        '2020-03-02T00:00:00Z',
+        '2020-03-09T00:00:00Z',
+      ]);
+      expectFutureMatches('0 0 * 3 1', [
+        '2020-03-02T00:00:00Z',
+        '2020-03-09T00:00:00Z',
+        '2020-03-16T00:00:00Z',
+        '2020-03-23T00:00:00Z',
+        '2020-03-30T00:00:00Z',
+        '2021-03-01T00:00:00Z',
+        '2021-03-08T00:00:00Z',
+        '2021-03-15T00:00:00Z',
+        '2021-03-22T00:00:00Z',
+        '2021-03-29T00:00:00Z',
+      ]);
+    });
   });
 });
