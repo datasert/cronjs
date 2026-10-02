@@ -338,13 +338,8 @@ function getLastWeekDay(time: DateTime) {
  */
 function getDaysOfType(time: DateTime, day: number) {
   const days: number[] = [];
-  for (let i = 1; i < 31; i++) {
+  for (let i = 1; i <= time.daysInMonth; i++) {
     const newTime = time.set({day: i});
-    if (newTime.month != time.month) {
-      // means it split over to next month
-      break;
-    }
-
     if (getWeekDay(newTime) === day) {
       days.push(newTime.day);
     }
