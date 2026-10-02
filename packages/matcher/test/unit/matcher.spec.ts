@@ -604,6 +604,47 @@ describe('getFutureMatches', () => {
   });
 });
 
+describe('nth weekday on day 31', () => {
+  const cases = [
+    ['sun', '2020-05-31', '2020-06-01'],
+    ['mon', '2020-08-31', '2020-09-01'],
+    ['tue', '2020-03-31', '2020-04-01'],
+    ['wed', '2021-03-31', '2021-04-01'],
+    ['thu', '2020-12-31', '2021-01-01'],
+    ['fri', '2020-07-31', '2020-08-01'],
+    ['sat', '2020-10-31', '2020-11-01'],
+  ];
+
+  it.each(cases)('matches the fifth %s on %s', (weekday, date) => {
+    expect(subject.isTimeMatches(`0 0 ? * ${weekday}#5`, `${date}T00:00:00Z`)).toBe(true);
+    expect(subject.isTimeMatches(`0 0 ? * ${weekday}#4`, `${date}T00:00:00Z`)).toBe(false);
+  });
+
+  it.each(cases)('returns the fifth %s on %s', (weekday, date, endDate) => {
+    expectFutureMatches(`0 0 ? * ${weekday}#5`, [`${date}T00:00:00Z`], {
+      startAt: `${date}T00:00:00Z`,
+      endAt: `${endDate}T00:00:00Z`,
+    });
+  });
+
+  it('returns all fifth Fridays within the year', () => {
+    expectFutureMatches(
+      '0 0 ? * fri#5',
+      ['2020-01-31T00:00:00Z', '2020-05-29T00:00:00Z', '2020-07-31T00:00:00Z', '2020-10-30T00:00:00Z'],
+      {endAt: '2021-01-01T00:00:00Z'}
+    );
+  });
+
+  it('skips a month without a fifth Friday', () => {
+    expect(
+      subject.getFutureMatches('0 0 ? * fri#5', {
+        startAt: '2021-02-01T00:00:00Z',
+        endAt: '2021-03-01T00:00:00Z',
+      })
+    ).toEqual([]);
+  });
+});
+
 describe('getFutureMatches with timezones', () => {
   it('1 am every day in pacific', () => {
     expectFutureMatches('0 1 * *', ['2020-01-01T09:00:00Z', '2020-01-02T09:00:00Z'], {timezone: 'America/Los_Angeles'});
